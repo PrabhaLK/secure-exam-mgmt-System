@@ -32,15 +32,15 @@ app = Flask(__name__)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PORT'] = 3308
-app.config['MYSQL_PASSWORD'] = 'your pwd'
+app.config['MYSQL_PORT'] = 3306
+app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'quizapp'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
-app.config['MAIL_SERVER']='smtp.stackmail.com'
+app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
-app.config['MAIL_USERNAME'] = 'care@youremail.com'
-app.config['MAIL_PASSWORD'] = 'password'
+app.config['MAIL_USERNAME'] = 'prabhalk.devs@gmail.com'
+app.config['MAIL_PASSWORD'] = 'xquzbemqthcgcpjk'
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
