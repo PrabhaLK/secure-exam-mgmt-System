@@ -44,7 +44,7 @@ app.config['MAIL_PASSWORD'] = 'xquzbemqthcgcpjk'
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
-app.config['SESSION_COOKIE_SAMESITE'] = "None"
+app.config['SESSION_COOKIE_SAMESITE'] = None
 
 app.config['SESSION_TYPE'] = 'filesystem'
 
