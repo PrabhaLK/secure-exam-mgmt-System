@@ -1,1 +1,1 @@
-# MyProctor.ai-Online_proctoring
+# MyProctorAI Secure Examination Management System
