@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <title>MyProctor.ai</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
 
@@ -16,7 +17,7 @@
 
 <!-- Theme CSS (fallback) -->
 <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/pixel.css') }}">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.6.5/css/buttons.dataTables.min.css">
 <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
@@ -37,7 +38,7 @@
               <center><lottie-player src="https://assets1.lottiefiles.com/packages/lf20_wEt2nn.json"  background="transparent"  speed="1"  style="width: 75px; height: 50px;"  loop  autoplay></lottie-player></center>
             </a>
             <div class="d-flex align-items-center">
-                <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
                   <span class="navbar-toggler-icon"></span>
                 </button>
             </div>
@@ -58,7 +59,7 @@
                 </div>
               </div>
               <div class="collapse-close d-md-none">
-                <a href="#sidebarMenu" class="fas fa-times" data-bs-toggle="collapse" data-bs-target="#sidebarMenu"
+                <a href="#sidebarMenu" class="fas fa-times" data-toggle="collapse" data-target="#sidebarMenu"
                   aria-controls="sidebarMenu" aria-expanded="true" aria-label="Toggle navigation"></a>
               </div>
             </div>
@@ -67,7 +68,7 @@
           <li class="nav-item">
             <span
               class="nav-link  collapsed  d-flex justify-content-between align-items-center"
-              data-bs-toggle="collapse" data-bs-target="#submenu-components">
+              data-toggle="collapse" data-target="#submenu-components">
               <span>
                 <span class="sidebar-icon"><span class="fas fa-plus"></span></span>
                 <span class="sidebar-text">Create Exam</span>
@@ -186,6 +187,23 @@
         </ul>
       </div>
     </nav>
+
+<script>
+  (function($){
+    function ensureSidebar(){
+      if(window.innerWidth >= 768){
+        var $s = $('#sidebarMenu');
+        if($s.length && !$s.hasClass('show')) $s.addClass('show');
+        $('[data-toggle="collapse"][data-target="#sidebarMenu"]').attr('aria-expanded','true');
+      } else {
+        $('#sidebarMenu').removeClass('show');
+        $('[data-toggle="collapse"][data-target="#sidebarMenu"]').attr('aria-expanded','false');
+      }
+    }
+    $(document).ready(ensureSidebar);
+    $(window).on('resize', ensureSidebar);
+  })(jQuery);
+</script>
     
     <main class="content">
       <nav class="navbar navbar-top navbar-expand navbar-dashboard navbar-dark ps-0 pe-2 pb-0">

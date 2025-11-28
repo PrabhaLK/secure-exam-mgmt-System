@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <title>MyProctor.ai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
 
@@ -17,7 +18,60 @@
 
 <!-- Pixel CSS -->
 <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/pixel.css') }}">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<!-- Small override: ensure dashboard sidebar is visible on md+ screens -->
+<style>
+@media (min-width: 768px) {
+  /* Keep collapse-based sidebar visible on desktop */
+  #sidebarMenu.collapse {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    width: 250px !important;
+    min-width: 220px !important;
+    max-width: 360px !important;
+    overflow: visible !important;
+  }
+
+  /* Force stable positioning and undo transforms set by theme/JS */
+  #sidebarMenu {
+    transform: none !important;
+    left: 0 !important;
+    position: relative !important;
+    flex: 0 0 250px !important;
+    -webkit-transform: none !important;
+  }
+
+  /* Make sure the main content doesn't collapse under the sidebar */
+  main.content {
+    margin-left: 250px !important;
+  }
+
+  /* If theme forces a hidden state via inline styles, ensure display overrides it */
+  #sidebarMenu[style] { display: block !important; visibility: visible !important; }
+}
+</style>
+<style>
+/* Ensure nav icons inherit link color and have spacing */
+.nav-link .fas, .nav-link .fa {
+  color: inherit;
+  width: 1.25rem;
+  text-align: center;
+}
+</style>
+<style>
+/* Ensure Font Awesome SVGs & icons inside nav links display and color correctly */
+.nav-link svg, .nav-link .svg-inline--fa, .nav-link i, .nav-link .fa, .nav-link .fas {
+  color: inherit !important;
+  fill: currentColor !important;
+  vertical-align: middle;
+  display: inline-block;
+  width: 1.25rem;
+  text-align: center;
+  margin-right: .5rem;
+}
+.nav-link.bg-light { padding: .45rem .75rem; }
+</style>
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
 
 {% block head %}{% endblock %}
   </head>
@@ -28,12 +82,7 @@
       {% block body %}{% endblock %}
     <!--</div>-->
 
-<!-- Place this tag in your head or just before your close body tag. -->
-<script async defer src="https://buttons.github.io/buttons.js"></script>
-
 <!-- Core -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-
 <script src="{{ url_for('static', filename='vendor/popper.js/dist/umd/popper.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendor/bootstrap/dist/js/bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendor/headroom.js/dist/headroom.min.js') }}"></script>
@@ -49,13 +98,9 @@
 <script src="{{ url_for('static', filename='vendor/smooth-scroll/dist/smooth-scroll.polyfills.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendor/prismjs/prism.js') }}"></script>
 
-<script async defer src="https://buttons.github.io/buttons.js"></script>
-
 <!-- pixel JS -->
 <script src="{{ url_for('static', filename='assets/js/pixel.js') }}"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  
   <footer id="sticky-footer" class="py-4">
   <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
                 <p class="font-weight-bold font-medium mb-0">Copyright © MyProctor.ai

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <title>MyProctor.ai</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
 
@@ -16,7 +17,7 @@
 
 <!-- Theme CSS (fallback) -->
 <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/pixel.css') }}">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.15.7/sweetalert2.min.js" integrity="sha512-IHQXMp2ha/aGMPumvzKLQEs9OrPhIOaEXxQGV5vnysMtEmNNcmUqk82ywqw7IbbvrzP5R3Hormh60UVDBB98yg==" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.15.7/sweetalert2.all.js" integrity="sha512-uRc/2ZGOQYtxuR4Uoq8K13eLYuGFWyW3P/U8/qI2wP3BuHQxFhuoiEreDpC80/L6HbPM5IhAVKgK8l7lWwyJkw==" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.15.7/sweetalert2.all.min.js" integrity="sha512-S8dy60Ic3uMzmNBB0ocD0TaIBdciM2JLjG2ZRaOhjNwYYO6I1aeRg/mY+T/x4WSx9oh42HvqHB0c7aK3d17Qog==" crossorigin="anonymous"></script>
@@ -131,107 +132,106 @@ function funStartExam()
 }
 </script>
 
-        <nav class="navbar navbar-dark navbar-theme-primary px-4 col-12 d-md-none">
-            <a class="navbar-brand me-lg-5" href="/professor_index">
-              <center><lottie-player src="https://assets1.lottiefiles.com/packages/lf20_wEt2nn.json"  background="transparent"  speed="1"  style="width: 75px; height: 50px;"  loop  autoplay></lottie-player></center>
-            </a>
-            <div class="d-flex align-items-center">
-                <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-                  <span class="navbar-toggler-icon"></span>
-                </button>
-            </div>
+<!-- Page-specific layout tweaks: ensure student page content sits beside sidebar on desktop -->
+<style>
+.student-shell { display: block; }
+@media (max-width: 767.98px) {
+  #studentMain { margin-left: 0 !important; padding: 1rem 1.25rem 2rem; }
+}
+@media (min-width: 768px) {
+  .student-shell { display: flex; align-items: stretch; min-height: 100vh; }
+  .student-shell #sidebarMenu { flex: 0 0 250px; width: 250px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .student-shell #studentMain { margin-left: 0 !important; flex: 1 1 auto; padding: 1.5rem 2.25rem 2.5rem; }
+}
+.dashboard-body {
+  padding-top: 1.5rem;
+  padding-bottom: 2.5rem;
+}
+</style>
+
+
+        <!-- Top navbar (mobile) -->
+        <nav class="navbar navbar-expand navbar-dark bg-dark px-3 d-md-none">
+          <a class="navbar-brand" href="/student_index">
+            <img src="{{ url_for('static', filename='assets/img/favicon/favicon-32x32.png') }}" alt="logo" style="height:28px;">
+            <span class="ml-2">MyProctor.ai</span>
+          </a>
+          <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
         </nav>
 
-        <nav id="sidebarMenu" class="sidebar d-md-block bg-dark text-white flex-md-column flex-row collapse" data-simplebar>
-          <div class="sidebar-inner px-4 pt-3">
-            <div class="user-card d-flex d-md-none align-items-center justify-content-between justify-content-md-center pb-4">
-              <div class="d-flex align-items-center">
-                <div class="user-avatar lg-avatar me-4">
-                  <img src="{{ url_for('static', filename='user-profile.png') }}" class="card-img-top rounded-circle border-white"
-                    alt="Bonnie Green">
-                </div>
-                <div class="d-block">
-                  <h2 class="h6">{{session.name}}</h2>
-                  <a href ="#" onclick="return funLogout()"class="btn btn-secondary text-dark btn-xs"><span
-                      class="me-2"><span class="fas fa-sign-out-alt"></span></span>Logout</a>
-                </div>
-              </div>
-              <div class="collapse-close d-md-none">
-                <a href="#sidebarMenu" class="fas fa-times" data-bs-toggle="collapse" data-bs-target="#sidebarMenu"
-                  aria-controls="sidebarMenu" aria-expanded="true" aria-label="Toggle navigation"></a>
+        <div class="student-shell">
+        <!-- Sidebar -->
+        <aside id="sidebarMenu" class="collapse d-md-block bg-dark text-white">
+          <div class="p-3">
+            <div class="d-flex align-items-center mb-4">
+              <img src="{{ url_for('static', filename='user-profile.png') }}" class="rounded-circle" alt="avatar" style="width:56px;height:56px;">
+              <div class="ml-3">
+                <div class="font-weight-bold">{{ session.name }}</div>
+                <div class="small text-muted">{{ session.email }}</div>
               </div>
             </div>
 
-        <ul class="nav flex-column pt-3 pt-md-0">
-          <li class="nav-item">
-            <a href ="#" onclick="return funStartExam()" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-clipboard-list"></span></span>
-              <span class="sidebar-text">Give Exam</span>
-            </a>
-          </li>
-      
-          <li class="nav-item ">
-            <a href="/{{session.email}}/student_test_history" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-history"></span></span>
-              <span class="sidebar-text">Exam History</span>
-            </a>
-          </li>
-
-          <li class="nav-item ">
-            <a href="/{{session.email}}/tests-given" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-poll"></span></span>
-              <span class="sidebar-text">Results</span>
-            </a>
-          </li>
-          <li role="separator" class="dropdown-divider mt-4 mb-3 border-black"></li>
-          <li class="nav-item ">
-            <a href="/report_student" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-bug"></span></span>
-              <span class="sidebar-text">Report Problems</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="/changepassword_student" class="nav-link d-flex align-items-center">
-              <span class="sidebar-icon"><span class="fas fa-key"></span></span>
-              <span class="sidebar-text">Change Password</span>
-            </a>
-          </li>
-          
-          <li class="nav-item">
-            <a href ="#" onclick="return funLogout()"
-            class="btn btn-secondary d-flex align-items-center justify-content-center">
-              <span class="sidebar-icon"><span class="fas fa-sign-out-alt"> Logout</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </nav>
+            <nav class="nav flex-column">
+              <a class="nav-link text-white" href="#" onclick="return funStartExam()">
+                <i class="fas fa-clipboard-list mr-2"></i> Give Exam
+              </a>
+              <a class="nav-link text-white" href="/{{session.email}}/student_test_history">
+                <i class="fas fa-history mr-2"></i> Exam History
+              </a>
+              <a class="nav-link text-white" href="/{{session.email}}/tests-given">
+                <i class="fas fa-chart-bar mr-2"></i> Results
+              </a>
+              <hr class="border-secondary">
+              <a class="nav-link text-white" href="/report_student">
+                <i class="fas fa-bug mr-2"></i> Report Problems
+              </a>
+              <a class="nav-link text-white" href="/changepassword_student">
+                <i class="fas fa-key mr-2"></i> Change Password
+              </a>
+              <div class="mt-4">
+                <a href="#" class="nav-link bg-light text-dark rounded d-flex align-items-center justify-content-center" onclick="funLogout()">
+                  <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i> Logout
+                </a>
+              </div>
+            </nav>
+          </div>
+        </aside>
         
-<main class="content">
-<nav class="navbar navbar-top navbar-expand navbar-dashboard navbar-dark ps-0 pe-2 pb-0">
-<div class="container-fluid px-0">
-<div class="d-flex justify-content-between w-100" id="navbarSupportedContent">
-  <div class="h-100 row align-items-center">
-              {% include 'includes/_messages.html' %}
-              {% block body %}{% endblock %}
-              <footer id="sticky-footer" class="py-4">
-                <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
-                              <p class="font-weight-bold font-medium mb-0">Copyright © MyProctor.ai
-                                  <span class="current-year">
-                                    <script>document.write(new Date().getFullYear())</script>
-                                  </span>. All rights reserved.</p>
-                </div><br>
-                <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
-                      <p class="font-weight-bold font-small mb-0">
-                        <span><a href="https://www.narenderkeswani.com/">
-                          Made with &#128151 By PrabhaLK Devs</a></span></p>
-              </div>
-              </footer>
+<main id="studentMain" class="content">
+  <nav class="navbar navbar-top navbar-expand navbar-dashboard navbar-dark ps-0 pe-2 pb-0">
+    <div class="container-fluid px-0">
+      <div class="d-flex justify-content-between w-100" id="navbarSupportedContent">
+        <div class="h-100 row align-items-center">
+          <!-- top navbar can hold controls if needed -->
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="dashboard-body container-fluid px-3 px-md-4">
+    {% include 'includes/_messages.html' %}
+    <div class="row">
+      <div class="col-12">
+        {% block body %}{% endblock %}
+      </div>
+    </div>
+
+    <footer id="sticky-footer" class="py-4">
+      <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
+        <p class="font-weight-bold font-medium mb-0">Copyright © MyProctor.ai
+          <span class="current-year"><script>document.write(new Date().getFullYear())</script></span>. All rights reserved.</p>
+      </div>
+      <br>
+      <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
+        <p class="font-weight-bold font-small mb-0"><span><a href="https://www.narenderkeswani.com/">Made with &#128151 By PrabhaLK Devs</a></span></p>
+      </div>
+    </footer>
   </div>
-            </div>
-         </div>
-</nav>
-    </main>
+
+</main>
+        </div>
     
     <script>
 
@@ -241,6 +241,17 @@ function funStartExam()
 //                     type: "POST",
 //                     url: "/logoutWindowClose"
 //                    });});
+</script>
+
+<script>
+  // On small screens, collapse sidebar after clicking a link
+  (function($){
+    $(document).on('click', '#sidebarMenu .nav-link', function(){
+      if(window.innerWidth < 768){
+        $('#sidebarMenu').collapse('hide');
+      }
+    });
+  })(jQuery);
 </script>
 
  <!-- Core -->
