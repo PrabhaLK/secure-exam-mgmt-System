@@ -1,16 +1,207 @@
 {% extends 'student_dashboard.html' %}
+
+{% block head %}
+<style>
+.dashboard-wrapper { padding-top: 1rem; padding-bottom: 2.5rem; }
+.dashboard-hero { background: linear-gradient(135deg, #4c6ef5, #9775fa); border-radius: 0.9rem; color: #fff; padding: 2rem 2.5rem; position: relative; overflow: hidden; box-shadow: 0 20px 45px rgba(76, 110, 245, 0.3); }
+.dashboard-hero::after { content: ""; position: absolute; inset: 15% -30% -35% 70%; background: rgba(255, 255, 255, 0.15); filter: blur(2px); border-radius: 50%; }
+.dashboard-hero h1 { font-weight: 700; }
+.dashboard-hero p { opacity: 0.9; }
+.dashboard-hero .hero-actions .btn { min-width: 160px; }
+.stats-row .card { border: none; border-radius: 0.8rem; box-shadow: 0 12px 24px rgba(15, 23, 42, 0.09); }
+.stats-row .card-title { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #636a82; }
+.stats-row .display-4 { font-size: 2.25rem; color: #1f2937; margin-bottom: 0.25rem; }
+.upcoming-card, .resources-card { border: none; border-radius: 0.85rem; box-shadow: 0 20px 35px rgba(15, 23, 42, 0.06); }
+.upcoming-card .badge { font-size: 0.75rem; letter-spacing: 0.05em; }
+.quick-links .list-group-item { border: none; border-bottom: 1px solid rgba(226, 232, 240, 0.8); padding: 0.85rem 0; }
+.quick-links .list-group-item:last-child { border-bottom: none; }
+.quick-links .list-group-item i { width: 1.5rem; }
+.resource-tile { border-radius: 0.75rem; border: 1px solid rgba(226, 232, 240, 0.8); padding: 1rem 1.25rem; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.resource-tile:hover { transform: translateY(-4px); box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08); }
+@media (max-width: 991.98px) {
+    .dashboard-hero { padding: 1.75rem; text-align: center; }
+    .dashboard-hero::after { display: none; }
+    .dashboard-hero .hero-actions { justify-content: center !important; }
+}
+</style>
+{% endblock %}
+
 {% block body %}
-<div class="container pt-3 pt-md-4 pb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="bg-white shadow-soft border rounded border-light p-4 p-lg-5 w-100">
-                <div class="text-center mb-4">
-                    <lottie-player src="https://assets1.lottiefiles.com/packages/lf20_wEt2nn.json" background="transparent" speed="1" style="width: 500px; height: 300px;" loop autoplay></lottie-player>
+<div class="dashboard-wrapper container-fluid px-0">
+    <div class="dashboard-hero mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-7 mb-4 mb-lg-0">
+                <h1 class="h2 mb-3">Welcome back, {{ session.name }} 👋</h1>
+                <p class="lead mb-4">Review your exam status, finish outstanding tasks, and monitor activity from a single place.</p>
+                <div class="hero-actions d-flex flex-wrap align-items-center">
+                    <a href="#upcoming" class="btn btn-light text-primary font-weight-bold mr-3 mb-2">View Upcoming Exam</a>
+                    <a href="/{{session.email}}/tests-given" class="btn btn-outline-light font-weight-bold mb-2">See Results</a>
                 </div>
-                <div class="text-center text-md-center mb-4 mt-md-0">
-                    <h4 class="mb-0">Welcome to MyProctor.ai</h4>
-                    <br>
-                    <h1 class="mb-0 h3">Hi, Student: {{session.name}}</h1>
+            </div>
+            <div class="col-lg-5 text-center">
+                <lottie-player src="https://assets1.lottiefiles.com/private_files/lf30_t26law.json" background="transparent" speed="1" style="width: 320px; height: 220px;" loop autoplay></lottie-player>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-row row mb-4">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="card-title text-uppercase">Next Exam</span>
+                        <span class="badge badge-warning text-uppercase">Scheduled</span>
+                    </div>
+                    <div class="display-4">14 Jun</div>
+                    <p class="text-muted mb-4">Artificial Intelligence &amp; Ethics</p>
+                    <a href="#upcoming" class="mt-auto text-primary font-weight-bold">Review details <i class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card h-100">
+                <div class="card-body">
+                    <span class="card-title text-uppercase">Completed Exams</span>
+                    <div class="display-4">08</div>
+                    <p class="text-muted mb-0">Keep momentum going and maintain streaks.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <span class="card-title text-uppercase">Average Score</span>
+                    <div class="display-4 text-success">87%</div>
+                    <p class="text-muted mb-0">Great work! Review analytics to plan the next exam.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row align-items-stretch mb-4">
+        <div class="col-lg-7 mb-4 mb-lg-0">
+            <div id="upcoming" class="card upcoming-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="mb-1">Upcoming Exam</h5>
+                            <p class="text-muted mb-0">Be prepared before you join the live proctoring session.</p>
+                        </div>
+                        <span class="badge badge-primary">Starts in 03d 12h</span>
+                    </div>
+                    <div class="border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex flex-wrap align-items-center">
+                            <div class="mr-3 mb-2">
+                                <i class="fas fa-book-reader fa-2x text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">AI Monitoring Practices</h6>
+                                <small class="text-muted">14 Jun &bull; 09:30 AM &bull; 90 Minutes</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="border rounded p-3 h-100">
+                                <p class="text-muted mb-1"><i class="fas fa-tasks mr-2 text-primary"></i>Preparation checklist</p>
+                                <ul class="list-unstyled mb-0 small text-muted">
+                                    <li>• Verify camera and microphone</li>
+                                    <li>• Review permitted materials</li>
+                                    <li>• Test network stability</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <p class="text-muted mb-1"><i class="fas fa-lightbulb mr-2 text-primary"></i>Last-minute tips</p>
+                                <ul class="list-unstyled mb-0 small text-muted">
+                                    <li>• Join 15 minutes early</li>
+                                    <li>• Keep student ID close</li>
+                                    <li>• Read proctor prompts carefully</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex flex-wrap">
+                        <a href="#" onclick="return funStartExam()" class="btn btn-primary mr-3 mb-2">Launch exam rules</a>
+                        <a href="/{{session.email}}/student_test_history" class="btn btn-outline-primary mb-2">View test history</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card quick-links h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Quick Actions</h5>
+                    <div class="list-group list-group-flush">
+                        <a href="#" onclick="return funStartExam()" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-play-circle text-primary mr-2"></i>Start an exam</span>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                        <a href="/{{session.email}}/tests-given" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-chart-line text-success mr-2"></i>Check latest results</span>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                        <a href="/{{session.email}}/student_test_history" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-history text-warning mr-2"></i>Browse exam history</span>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                        <a href="/report_student" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-headset text-danger mr-2"></i>Report an issue</span>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                        <a href="/changepassword_student" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-user-shield text-info mr-2"></i>Update account security</span>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card resources-card">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-1">Learning Resources</h5>
+                    <p class="text-muted mb-0">Stay sharp with curated material before the proctored session.</p>
+                </div>
+                <a href="/student_index" class="btn btn-sm btn-outline-primary">View all</a>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="resource-tile h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge badge-pill badge-primary mr-2">Guide</span>
+                            <span class="text-muted small">5 min read</span>
+                        </div>
+                        <h6 class="mb-2">How remote proctoring works</h6>
+                        <p class="text-muted small mb-3">Understand verification steps, environment checks, and live monitoring expectations.</p>
+                        <a href="/report_student" class="text-primary font-weight-bold small">Read document <i class="fas fa-arrow-right ml-1"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="resource-tile h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge badge-pill badge-success mr-2">Video</span>
+                            <span class="text-muted small">8 min</span>
+                        </div>
+                        <h6 class="mb-2">Optimise your setup</h6>
+                        <p class="text-muted small mb-3">Quick walkthrough covering browser requirements, camera framing, and microphone tests.</p>
+                        <a href="https://www.youtube.com" target="_blank" class="text-primary font-weight-bold small">Watch now <i class="fas fa-arrow-right ml-1"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="resource-tile h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge badge-pill badge-warning mr-2">Checklist</span>
+                            <span class="text-muted small">Printable</span>
+                        </div>
+                        <h6 class="mb-2">Exam day essentials</h6>
+                        <p class="text-muted small mb-3">A concise list of tasks you can tick off before the proctor connects.</p>
+                        <a href="/{{session.email}}/tests-given" class="text-primary font-weight-bold small">Download PDF <i class="fas fa-arrow-right ml-1"></i></a>
+                    </div>
                 </div>
             </div>
         </div>
