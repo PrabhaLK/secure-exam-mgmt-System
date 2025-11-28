@@ -134,6 +134,23 @@ function funStartExam()
 
 <!-- Page-specific layout tweaks: ensure student page content sits beside sidebar on desktop -->
 <style>
+#studentMain {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(145deg, #10182b 0%, #18253a 48%, #22324a 100%);
+  overflow: hidden;
+}
+#studentMain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(96, 165, 250, 0.22), transparent 48%),
+    radial-gradient(circle at 84% -8%, rgba(168, 135, 255, 0.26), transparent 55%),
+    radial-gradient(circle at 50% 120%, rgba(45, 212, 191, 0.18), transparent 62%);
+  pointer-events: none;
+  z-index: 0;
+}
 .student-shell { display: block; }
 @media (max-width: 767.98px) {
   #studentMain { margin-left: 0 !important; padding: 0.35rem 1.25rem 1.75rem; }
@@ -144,8 +161,16 @@ function funStartExam()
   .student-shell #studentMain { margin-left: 0 !important; flex: 1 1 auto; padding: 0.35rem 2rem 2rem; }
 }
 .dashboard-body {
+  position: relative;
+  z-index: 1;
   padding-top: 0.35rem;
   padding-bottom: 2rem;
+}
+#studentMain footer {
+  color: rgba(226, 232, 240, 0.75);
+}
+#studentMain footer a {
+  color: #f8fafc;
 }
 </style>
 
