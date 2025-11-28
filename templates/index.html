@@ -2,7 +2,16 @@
 {% block body %}
 <html>
 <head>
-     <div class="container">
+<style>
+/* index page spacing tweaks: increase vertical gaps by ~32px for clearer section separation */
+.index-spacing .row.align-items-center.my-large { margin-top: 32px; margin-bottom: 32px; }
+.index-spacing h1.display-2, .index-spacing h3.display-4, .index-spacing .lead { margin-bottom: 32px; }
+.index-spacing .mb-4 { margin-bottom: calc(1.5rem + 32px) !important; }
+.index-spacing .mb-3 { margin-bottom: calc(1rem + 32px) !important; }
+.index-spacing .py-5 { padding-top: calc(3rem + 32px); padding-bottom: calc(3rem + 32px); }
+</style>
+  <div class="index-spacing">
+  <div class="container">
         <div class="row justify-content-between align-items-center">
             <div class="col">
             <div class="card">
@@ -54,7 +63,7 @@
       <div class="row align-items-center my-large">
       <div class="col-md-6">
       <div id="platform-exam_proctoring" class="platform-animation">
-        <img class="mb-3 mt-3" src="/static/admin-dashboard.png" alt="">
+        <img class="mb-3 mt-3" src="/static/admin-dashboard-1.png" alt="admin Dash">
       </div>
       </div>
       <div class="col-md-6 col-lg-5 offset-lg-1">
@@ -152,7 +161,7 @@
 
           <div class="row align-items-center my-large">
             <div class="col-md-6 order-md-2 offset-lg-1 ">
-              <img class="" src="/static/actionable-information.png" alt="">
+              <img class="" src="/static/actionable-information.webp" alt="">
             </div>
             <div class="col-md-6 col-lg-5 order-md-1">
             <h1 class="display-2 mb-4">Actionable Information</h1>
@@ -623,4 +632,5 @@
     </div>
 </div>
               </section>
+    </div>
 {% endblock %}
