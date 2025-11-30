@@ -33,201 +33,165 @@
 {% block head %}{% endblock %}
   </head>
   <body>
-        <nav class="navbar navbar-dark navbar-theme-primary px-4 col-12 d-md-none">
-            <a class="navbar-brand me-lg-5" href="/professor_index">
-              <center><lottie-player src="https://assets1.lottiefiles.com/packages/lf20_wEt2nn.json"  background="transparent"  speed="1"  style="width: 75px; height: 50px;"  loop  autoplay></lottie-player></center>
-            </a>
-            <div class="d-flex align-items-center">
-                <button class="navbar-toggler d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-                  <span class="navbar-toggler-icon"></span>
-                </button>
-            </div>
+        <nav class="navbar navbar-expand navbar-dark bg-dark px-3 d-md-none">
+          <a class="navbar-brand" href="/professor_index">
+            <lottie-player src="https://assets1.lottiefiles.com/packages/lf20_wEt2nn.json" background="transparent" speed="1" style="width:75px;height:50px;" loop autoplay></lottie-player>
+          </a>
+          <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#profSidebar" aria-controls="profSidebar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
         </nav>
-        
-        <nav id="sidebarMenu" class="sidebar d-md-block bg-dark text-white flex-md-column flex-row collapse" data-simplebar>
-          <div class="sidebar-inner px-4 pt-3">
-            <div class="user-card d-flex d-md-none align-items-center justify-content-between justify-content-md-center pb-4">
-              <div class="d-flex align-items-center">
-                <div class="user-avatar lg-avatar me-4">
-                  <img src="{{ url_for('static', filename='user-profile.png') }}" class="card-img-top rounded-circle border-white"
-                    alt="Bonnie Green">
-                </div>
-                <div class="d-block">
-                  <h2 class="h6">{{session.name}}</h2>
-                  <a href ="#" onclick="return funLogout()"class="btn btn-secondary text-dark btn-xs"><span
-                      class="me-2"><span class="fas fa-sign-out-alt"></span></span>Logout</a>
-                </div>
-              </div>
-              <div class="collapse-close d-md-none">
-                <a href="#sidebarMenu" class="fas fa-times" data-toggle="collapse" data-target="#sidebarMenu"
-                  aria-controls="sidebarMenu" aria-expanded="true" aria-label="Toggle navigation"></a>
+
+        <div class="prof-shell">
+        <aside id="profSidebar" class="collapse d-md-block bg-dark text-white">
+          <div class="p-3">
+            <div class="d-flex align-items-center mb-4">
+              <img src="{{ url_for('static', filename='user-profile.png') }}" class="rounded-circle" alt="avatar" style="width:56px;height:56px;">
+              <div class="ml-3">
+                <a href="/professor_index" class="font-weight-bold text-white text-decoration-none d-block">{{ session.name }}</a>
+                <div class="small text-muted">{{ session.email }}</div>
               </div>
             </div>
 
-        <ul class="nav flex-column pt-3 pt-md-0">
-          <li class="nav-item">
-            <span
-              class="nav-link  collapsed  d-flex justify-content-between align-items-center"
-              data-toggle="collapse" data-target="#submenu-components">
-              <span>
-                <span class="sidebar-icon"><span class="fas fa-plus"></span></span>
-                <span class="sidebar-text">Create Exam</span>
-              </span>
-              <span class="link-arrow"><span class="fas fa-chevron-right"></span></span>
-            </span>
-            <div class="multi-level collapse " role="list"
-              id="submenu-components" aria-expanded="false">
-              <ul class="flex-column nav">
-                <li class="nav-item">
-                  <a class="nav-link"
-                    href="/create-test">
-                    <span class="sidebar-text">Objective</span>
-                  </a>
-                </li>
-                <li class="nav-item ">
-                  <a class="nav-link" href="/create_test_lqa">
-                    <span class="sidebar-text">Subjective</span>
-                  </a>
-                </li>
-                <li class="nav-item ">
-                  <a class="nav-link" href="/create_test_pqa">
-                    <span class="sidebar-text">Practical</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </li>
-          <li class="nav-item">
-            <a href="/generate_test" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-magic"></span></span>
-              <span class="sidebar-text">Generate Questions</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="/viewquestions" class="nav-link d-flex justify-content-between">
-              <span>
-                <span class="sidebar-icon"><span class="fas fa-eye"></span></span>
-                <span class="sidebar-text">View Questions </span>
-              </span>
-            </a>
-          </li>
-          <li class="nav-item ">
-            <a href="/updatetidlist" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-edit"></span></span>
-              <span class="sidebar-text">Update Questions</span>
-            </a>
-          </li>
-          <li class="nav-item ">
-            <a href="/deltidlist" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-trash-alt"></span></span>
-              <span class="sidebar-text">Delete Questions</span>
-            </a>
-          </li>
-          <li class="nav-item ">
-            <a href="/{{session.email}}/disptests" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-history"></span></span>
-              <span class="sidebar-text">Exam History</span>
-            </a>
-          </li>
-          <li class="nav-item ">
-            <a href="/livemonitoringtid" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-video"></span></span>
-              <span class="sidebar-text">Live Monitoring</span>
-            </a>
-          </li> 
-          <li class="nav-item ">
-            <a href="/viewstudentslogs" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-binoculars"></span></span>
-              <span class="sidebar-text">Student Monitoring</span>
-            </a>
-          </li>          
-          <li class="nav-item ">
-            <a href="/insertmarkstid" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-spell-check"></span></span>
-              <span class="sidebar-text">Insert Marks</span>
-            </a>
-          </li>  
-          <li class="nav-item">
-            <li class="nav-item">
-              <a href="/publish-results-testid" class="nav-link">
-                <span class="sidebar-icon"><span class="fas fa-clipboard-check"></span></span>
-                <span class="sidebar-text">Publish Results</span>
+            <nav class="nav flex-column">
+              <a class="nav-link text-white" href="/">
+                <i class="fas fa-home mr-2"></i> MyProctor AI
               </a>
-            </li> 
-            <a href="/{{session.email}}/tests-created" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-poll"></span></span>
-              <span class="sidebar-text">Results</span>
-            </a>
-          </li>  
-          <li role="separator" class="dropdown-divider mt-4 mb-3 border-black"></li>
-          <li class="nav-item ">
-            <a href="/report_professor" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-bug"></span></span>
-              <span class="sidebar-text">Report Problems</span>
-            </a>
-          </li>
-          <li class="nav-item ">
-            <a href="/payment" class="nav-link">
-              <span class="sidebar-icon"><span class="fas fa-money-bill-alt"></span></span>
-              <span class="sidebar-text">Payment</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="/changepassword_professor" class="nav-link d-flex align-items-center">
-              <span class="sidebar-icon"><span class="fas fa-key"></span></span>
-              <span class="sidebar-text">Change Password</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href ="#" onclick="return funLogout()"
-              class="btn btn-secondary d-flex align-items-center justify-content-center">
-              <span class="sidebar-icon"><span class="fas fa-sign-out-alt"></span></span> <span>Logout</span>
-            </a>
-          </li>
-        </ul>
+              <a class="nav-link text-white d-flex justify-content-between align-items-center" href="#" data-toggle="collapse" data-target="#createExamMenu" aria-expanded="false">
+                <span><i class="fas fa-plus mr-2"></i>Create Exam</span>
+                <i class="fas fa-chevron-right small"></i>
+              </a>
+              <div class="collapse" id="createExamMenu" data-parent="#profSidebar">
+                <nav class="nav flex-column ml-3">
+                  <a class="nav-link text-white" href="/create-test"><i class="fas fa-check-circle mr-2"></i> Objective</a>
+                  <a class="nav-link text-white" href="/create_test_lqa"><i class="fas fa-align-left mr-2"></i> Subjective</a>
+                  <a class="nav-link text-white" href="/create_test_pqa"><i class="fas fa-laptop mr-2"></i> Practical</a>
+                </nav>
+              </div>
+              <a class="nav-link text-white" href="/generate_test">
+                <i class="fas fa-magic mr-2"></i> Generate Questions
+              </a>
+              <a class="nav-link text-white" href="/viewquestions">
+                <i class="fas fa-eye mr-2"></i> View Questions
+              </a>
+              <a class="nav-link text-white" href="/updatetidlist">
+                <i class="fas fa-edit mr-2"></i> Update Questions
+              </a>
+              <a class="nav-link text-white" href="/deltidlist">
+                <i class="fas fa-trash-alt mr-2"></i> Delete Questions
+              </a>
+              <a class="nav-link text-white" href="/{{session.email}}/disptests">
+                <i class="fas fa-history mr-2"></i> Exam History
+              </a>
+              <a class="nav-link text-white" href="/livemonitoringtid">
+                <i class="fas fa-video mr-2"></i> Live Monitoring
+              </a>
+              <a class="nav-link text-white" href="/viewstudentslogs">
+                <i class="fas fa-users mr-2"></i> Student Monitoring
+              </a>
+              <a class="nav-link text-white" href="/insertmarkstid">
+                <i class="fas fa-clipboard-list mr-2"></i> Insert Marks
+              </a>
+              <a class="nav-link text-white" href="/publish-results-testid">
+                <i class="fas fa-share-square mr-2"></i> Publish Results
+              </a>
+              <a class="nav-link text-white" href="/{{session.email}}/tests-created">
+                <i class="fas fa-chart-bar mr-2"></i> Results
+              </a>
+              <hr class="border-secondary">
+              <a class="nav-link text-white" href="/report_professor">
+                <i class="fas fa-bug mr-2"></i> Report Problems
+              </a>
+              <a class="nav-link text-white" href="/payment">
+                <i class="fas fa-credit-card mr-2"></i> Payment
+              </a>
+              <a class="nav-link text-white" href="/changepassword_professor">
+                <i class="fas fa-key mr-2"></i> Change Password
+              </a>
+              <div class="mt-4">
+                <a href="#" class="nav-link bg-light text-dark rounded d-flex align-items-center justify-content-center" onclick="funLogout()">
+                  <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i> Logout
+                </a>
+              </div>
+            </nav>
+          </div>
+        </aside>
+
+<main id="profMain" class="content">
+  <div class="prof-dashboard container-fluid px-3 px-md-4">
+    {% include 'includes/_messages.html' %}
+    <div class="row">
+      <div class="col-12">
+        {% block body %}{% endblock %}
       </div>
-    </nav>
+    </div>
+
+    <footer id="sticky-footer" class="py-4">
+      <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
+        <p class="font-weight-bold font-medium mb-0">Copyright © MyProctor.ai
+          <span class="current-year"><script>document.write(new Date().getFullYear())</script></span>. All rights reserved.</p>
+      </div>
+      <br>
+      <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
+        <p class="font-weight-bold font-small mb-0"><span><a href="https://www.narenderkeswani.com/">Made with &#128151 By PrabhaLK Devs</a></span></p>
+      </div>
+    </footer>
+  </div>
+
+</main>
+        </div>
+
+<style>
+#profMain {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(145deg, #10182b 0%, #18253a 48%, #22324a 100%);
+  overflow: hidden;
+}
+#profMain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(96, 165, 250, 0.22), transparent 48%),
+    radial-gradient(circle at 84% -8%, rgba(168, 135, 255, 0.26), transparent 55%),
+    radial-gradient(circle at 50% 120%, rgba(45, 212, 191, 0.18), transparent 62%);
+  pointer-events: none;
+  z-index: 0;
+}
+.prof-shell { display: block; }
+@media (max-width: 767.98px) {
+  #profMain { margin-left: 0 !important; padding: 0.35rem 1.25rem 1.75rem; }
+}
+@media (min-width: 768px) {
+  .prof-shell { display: flex; align-items: stretch; min-height: 100vh; }
+  .prof-shell #profSidebar { flex: 0 0 250px; width: 250px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .prof-shell #profMain { margin-left: 0 !important; flex: 1 1 auto; padding: 0.35rem 2rem 2rem; }
+}
+.prof-dashboard {
+  position: relative;
+  z-index: 1;
+  padding-top: 0.35rem;
+  padding-bottom: 2rem;
+}
+#profMain footer {
+  color: rgba(226, 232, 240, 0.75);
+}
+#profMain footer a {
+  color: #f8fafc;
+}
+</style>
 
 <script>
   (function($){
-    function ensureSidebar(){
-      if(window.innerWidth >= 768){
-        var $s = $('#sidebarMenu');
-        if($s.length && !$s.hasClass('show')) $s.addClass('show');
-        $('[data-toggle="collapse"][data-target="#sidebarMenu"]').attr('aria-expanded','true');
-      } else {
-        $('#sidebarMenu').removeClass('show');
-        $('[data-toggle="collapse"][data-target="#sidebarMenu"]').attr('aria-expanded','false');
+    $(document).on('click', '#profSidebar .nav-link', function(){
+      var $link = $(this);
+      if(window.innerWidth < 768 && !$link.data('toggle')){
+        $('#profSidebar').collapse('hide');
       }
-    }
-    $(document).ready(ensureSidebar);
-    $(window).on('resize', ensureSidebar);
+    });
   })(jQuery);
 </script>
-    
-    <main class="content">
-      <nav class="navbar navbar-top navbar-expand navbar-dashboard navbar-dark ps-0 pe-2 pb-0">
-<div class="container-fluid px-0">
-<div class="d-flex justify-content-between w-100" id="navbarSupportedContent">
-  <div class="h-100 row align-items-center">
-              {% include 'includes/_messages.html' %}
-              {% block body %}{% endblock %}
-      
-              <footer id="sticky-footer" class="py-4">
-                <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
-                              <p class="font-weight-bold font-medium mb-0">Copyright © MyProctor.ai
-                                  <span class="current-year"><script>document.write(new Date().getFullYear())</script>
-                                  </span>. All rights reserved.</p>
-                </div><br>
-                <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
-                      <p class="font-weight-bold font-small mb-0"><span><a href="https://www.narenderkeswani.com/">Made with &#128151 By PrabhaLK Devs</a></span></p>
-              </div>
-              </footer>
-  </div>
-            </div>
-         </div>
-</nav>
-    </main>
  <script>
 function funLogout () {
 
