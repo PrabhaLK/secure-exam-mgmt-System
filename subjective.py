@@ -56,13 +56,13 @@ class SubjectiveTest:
             rand_num %= 4
             question = self.question_pattern[rand_num] + selected_key + "."
             question_answer.append({"Question": question, "Answer": answer})
-        que = list()
-        ans = list()
-        while len(que) < int(self.noOfQues):
-            rand_num = np.random.randint(0, len(question_answer))
-            if question_answer[rand_num]["Question"] not in que:
-                que.append(question_answer[rand_num]["Question"])
-                ans.append(question_answer[rand_num]["Answer"])
-            else:
-                continue
+        available = len(question_answer)
+        if available == 0:
+            return [], []
+
+        desired = int(self.noOfQues)
+        take = min(desired, available)
+        indices = np.atleast_1d(np.random.choice(available, take, replace=False))
+        que = [question_answer[i]["Question"] for i in indices]
+        ans = [question_answer[i]["Answer"] for i in indices]
         return que, ans
