@@ -119,6 +119,13 @@ class ObjectiveTest:
         if not question_answer:
             return [], []
 
+        unique_questions = {}
+        for qa in question_answer:
+            q_text = qa.get("Question")
+            if q_text and q_text not in unique_questions:
+                unique_questions[q_text] = qa
+        question_answer = list(unique_questions.values())
+
         available = len(question_answer)
         take = min(desired, available)
         indices = np.atleast_1d(np.random.choice(available, take, replace=False))
