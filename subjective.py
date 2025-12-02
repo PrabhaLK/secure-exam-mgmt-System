@@ -48,14 +48,15 @@ class SubjectiveTest:
                     else:
                         question_answer_dict[temp] += sentence
         keyword_list = list(question_answer_dict.keys())
-        question_answer = list()
-        for _ in range(int(self.noOfQues)):
-            rand_num = np.random.randint(0, len(keyword_list))
-            selected_key = keyword_list[rand_num]
-            answer = question_answer_dict[selected_key]
-            rand_num %= 4
-            question = self.question_pattern[rand_num] + selected_key + "."
-            question_answer.append({"Question": question, "Answer": answer})
+        if not keyword_list:
+            return [], []
+
+        question_answer = []
+        pattern_count = len(self.question_pattern)
+        for idx, key in enumerate(keyword_list):
+            question = self.question_pattern[idx % pattern_count] + key + "."
+            question_answer.append({"Question": question, "Answer": question_answer_dict[key]})
+
         available = len(question_answer)
         if available == 0:
             return [], []
