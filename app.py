@@ -781,6 +781,8 @@ def deldispques():
 		else:
 			flash("Some Error Occured!")
 			return redirect(url_for('deltidlist'))
+	flash('Please select a test ID to view questions.', 'info')
+	return redirect(url_for('deltidlist'))
 
 @app.route('/delete_questions/<testid>', methods=['GET', 'POST'])
 @user_role_professor

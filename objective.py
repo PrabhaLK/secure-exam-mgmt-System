@@ -22,8 +22,12 @@ class ObjectiveTest:
         return trivial_sentences
 
     def identify_trivial_sentences(self, sentence):
-        tags = nltk.pos_tag(sentence)
-        if tags[0][1] == "RB" or len(nltk.word_tokenize(sentence)) < 4:
+        tokens = nltk.word_tokenize(sentence)
+        if len(tokens) < 4:
+            return None
+
+        tags = nltk.pos_tag(tokens)
+        if not tags or tags[0][1] == "RB":
             return None
         
         noun_phrases = list()
@@ -33,8 +37,7 @@ class ObjectiveTest:
                 {<NNP>+<NNS>*}
             """
         chunker = nltk.RegexpParser(grammer)
-        tokens = nltk.word_tokenize(sentence)
-        pos_tokens = nltk.tag.pos_tag(tokens)
+        pos_tokens = tags
         tree = chunker.parse(pos_tokens)
 
         for subtree in tree.subtrees():
@@ -107,19 +110,19 @@ class ObjectiveTest:
 
     def generate_test(self):
         trivial_pair = self.get_trivial_sentences()
-        question_answer = list()
-        for que_ans_dict in trivial_pair:
-            if que_ans_dict["Key"] > int(self.noOfQues):
-                question_answer.append(que_ans_dict)
-            else:
-                continue
-        question = list()
-        answer = list()
-        while len(question) < int(self.noOfQues):
-            rand_num = np.random.randint(0, len(question_answer))
-            if question_answer[rand_num]["Question"] not in question:
-                question.append(question_answer[rand_num]["Question"])
-                answer.append(question_answer[rand_num]["Answer"])
-            else:
-                continue
-        return question, answer
+        desired = int(self.noOfQues)
+        question_answer = [qa for qa in trivial_pair if qa["Key"] > desired]
+
+        if not question_answer:
+            question_answer = list(trivial_pair)
+
+        if not question_answer:
+            return [], []
+
+        available = len(question_answer)
+        take = min(desired, available)
+        indices = np.atleast_1d(np.random.choice(available, take, replace=False))
+
+        questions = [question_answer[i]["Question"] for i in indices]
+        answers = [question_answer[i]["Answer"] for i in indices]
+        return questions, answers
