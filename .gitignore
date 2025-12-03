@@ -1,2 +1,6 @@
 flask_session/
 models/yolov3.weights
+__pycache__/
+venv36/
+gaze_tracking/
+.DS_Store
