@@ -1,99 +1,273 @@
-<script src="{{ url_for('static', filename='volt/vendor/sweetalert2/dist/sweetalert2.all.min.js') }}"></script>
-<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-<header class="header-global">
-   <nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-theme-primary bg-white fixed-top"> 
-<div class="container">
-    <a class="navbar-brand" href="/"><span style="font-size:18px;"><center><lottie-player src="https://assets1.lottiefiles.com/packages/lf20_wEt2nn.json"  background="transparent"  speed="1"  style="width: 70px; height: 50px;"  loop  autoplay></lottie-player>MyProctor.ai</center></span></a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon">   
-        <i class="fas fa-bars" style="color:#1c2540; font-size:28px;"></i>
-    </span>
-    </button>  
-   <div class="collapse navbar-collapse" id="navbarSupportedContent">
-     <ul class="nav navbar-nav ml-auto">
-      {% if session.logged_in %}
-      {% if session.user_role == "student" %}
-      <li class="nav-item ">
-        <a class="nav-link" id="active1" href="/student_index"><span class="fas fa-columns" > Dashboard</span></a></li>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="active2" href="/changepassword_student"><span class="fas fa-key" > Change Password</span></a></li>
-      </li>
-      {% endif %}
-      {% if session.user_role == "teacher" %}
-      <li class="nav-item ">
-        <a class="nav-link" id="active1" href="/professor_index"><span class="fas fa-columns" > Dashboard</span></a></li>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="active2" href="/changepassword_professor"><span class="fas fa-key" > Change Password</span></a></li>
-      </li>
-      {% endif %}
-        <li class="nav-item">
-          <a class="nav-link" id="active3" href="/contact"><span class="fas fa-phone-alt" > Contact Us</span></a></li>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyProctor.ai Navbar</title>
+    
+    <!-- Dependencies -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
-          <li class="nav-item">
-            <a class="nav-link" id="active4" href="/faq"><span class="fas fa-question" > FAQ</span></a></li>
+    <style>
+        /* 1. CORE AESTHETICS */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
-          <li class="nav-item">
-            <a class="nav-link" id="active4" href ="#" onclick="return funLogout()" class="btn btn-secondary text-dark btn-xs"><span class="fas fa-sign-out-alt" > Logout</span></a></li>
-    {% else %}
-    <li class="nav-item">
-      <a class="nav-link" id="active6"  href="/login"><span class="fas fa-sign-in-alt" > Login</span></a></li>
-    </li>
-      <li class="nav-item">
-        <a class="nav-link" id="active5" href="/register"><span class="fas fa-user-plus" > Register</span></a></li>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="active8"  href="/contact"><span class="fas fa-phone-alt" > Contact Us</span></a></li>
-</li>  
-      <li class="nav-item">
-        <a class="nav-link" id="active7"  href="/faq"><span class="fas fa-question" > FAQ</span></a></li>
-              </li>   
- {% endif %}
-	  </ul>
-	</div>
-	</div>
-</nav>
-</header>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 200vh; /* Made tall to demonstrate scrolling */
+            padding-top: 120px; /* Space for the initial floating nav */
+        }
+
+        /* 2. THE DYNAMIC NAVBAR 
+           We use a transition on width, margin, and border-radius to handle the 'Docking' effect.
+        */
+        .glass-nav-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            display: flex;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); /* Smooth 'Apple-like' ease */
+            padding-top: 20px; /* The initial gap */
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            
+            /* Initial 'Floating Pill' State */
+            border-radius: 50px; 
+            padding: 0.5rem 2rem;
+            width: 90%;
+            max-width: 1200px;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        /* 3. THE SCROLLED STATE (The Fix)
+           This class is added by JS when scrolling starts.
+        */
+        .glass-nav-container.scrolled {
+            padding-top: 0; /* Remove top gap */
+        }
+
+        .glass-nav-container.scrolled .glass-nav {
+            width: 100%; /* Expand to full width */
+            max-width: 100%;
+            border-radius: 0 0 20px 20px; /* Square top, rounded bottom */
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            padding: 0.5rem 3rem; /* Adjust padding slightly */
+            background: rgba(255, 255, 255, 0.95); /* Slightly more opaque when docked */
+        }
+
+        /* Mobile Responsive Tweaks */
+        @media (max-width: 1500px) {
+            .glass-nav {
+                width: 95%;
+                padding: 0.5rem 1rem;
+            }
+            .glass-nav-container.scrolled .glass-nav {
+                padding: 0.5rem 1rem;
+            }
+        }
+
+        /* 4. BRANDING & LINKS */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #2c3e50 !important;
+            letter-spacing: 0.5px;
+        }
+        
+        .brand-text {
+            background: -webkit-linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: 5px;
+        }
+
+        .nav-item { margin: 0 4px; }
+
+        .nav-link {
+            color: #555 !important;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 8px 18px !important;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(118, 75, 162, 0.08); 
+            color: #764ba2 !important;
+            transform: translateY(-1px);
+        }
+
+        .nav-link i {
+            font-size: 1.1em;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover i { transform: rotate(10deg); }
+
+        /* Buttons */
+        .btn-glass-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+        }
+        
+        .btn-glass-primary:hover {
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-glass-danger {
+            background: #fff;
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b !important;
+        }
+
+        .btn-glass-danger:hover {
+            background: #ff6b6b;
+            color: white !important;
+        }
+        
+        /* Demo Content to prove scrolling */
+        .demo-content {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- 
+    Structure Changed: 
+    We use a wrapper 'glass-nav-container' to handle the positioning 
+    and padding logic separately from the navbar styling.
+-->
+<div class="glass-nav-container" id="navContainer">
+    <nav class="navbar navbar-expand-lg glass-nav">
+        
+        <!-- Brand / Logo -->
+        <a class="navbar-brand" href="/">
+            <lottie-player 
+                src="https://assets1.lottiefiles.com/packages/lf20_wEt2nn.json" 
+                background="transparent" 
+                speed="1" 
+                style="width: 50px; height: 50px;" 
+                loop 
+                autoplay>
+            </lottie-player>
+            <span class="brand-text">MyProctor.ai</span>
+        </a>
+
+        <!-- Mobile Toggler -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="fas fa-bars" style="color: #764ba2; font-size: 1.5rem;"></i>
+        </button>
+
+        <!-- Links -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto align-items-center">
+                
+                {% if session.logged_in %}
+                    <!-- Logged In Links -->
+                    {% if session.user_role == "student" %}
+                    <li class="nav-item"><a class="nav-link" href="/student_index"><i class="fas fa-columns"></i><span>Dashboard</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/changepassword_student"><i class="fas fa-key"></i><span>Password</span></a></li>
+                    {% endif %}
+                    {% if session.user_role == "teacher" %}
+                    <li class="nav-item"><a class="nav-link" href="/professor_index"><i class="fas fa-chalkboard-teacher"></i><span>Dashboard</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/changepassword_professor"><i class="fas fa-key"></i><span>Password</span></a></li>
+                    {% endif %}
+
+                    <li class="nav-item"><a class="nav-link" href="/contact"><i class="fas fa-paper-plane"></i><span>Contact</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/faq"><i class="fas fa-life-ring"></i><span>FAQ</span></a></li>
+                    <li class="nav-item ml-lg-3"><a class="nav-link btn-glass-danger rounded-pill px-4" href="#" onclick="return funLogout()"><i class="fas fa-sign-out-alt"></i><span>Sign Out</span></a></li>
+
+                {% else %}
+                    <!-- Guest Links -->
+                    <li class="nav-item"><a class="nav-link" href="/contact"><i class="fas fa-paper-plane"></i><span>Contact</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/faq"><i class="fas fa-question-circle"></i><span>FAQ</span></a></li>
+                    <li class="nav-item ml-lg-2"><a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i><span>Login</span></a></li>
+                    <li class="nav-item"><a class="nav-link btn-glass-primary rounded-pill px-4 ml-2" href="/register"><i class="fas fa-user-plus"></i><span>Get Started</span></a></li>
+                {% endif %}
+
+            </ul>
+        </div>
+    </nav>
+</div>
+
+
+<!-- JavaScript Logic -->
 <script>
-   function funLogout () {
-swal.fire({
-  title: 'Are you sure?',
-  text: "Do you really want to logout?",
-  icon: 'warning',
-  showCancelButton: true,
-  confirmButtonText: 'Yes, Logout me!',
-  cancelButtonText: 'No!',
-  confirmButtonColor: '#d33',
-  cancelButtonColor: '#202124',
-  reverseButtons: true
-}).then((result) => {
-  if (result.isConfirmed) {
-              $.ajax({
+    // 1. SCROLL DOCKING LOGIC
+    // This removes the top gap as soon as the user starts scrolling
+    window.addEventListener('scroll', function() {
+        const navContainer = document.getElementById('navContainer');
+        if (window.scrollY > 10) {
+            navContainer.classList.add('scrolled');
+        } else {
+            navContainer.classList.remove('scrolled');
+        }
+    });
+
+    // 2. LOGOUT LOGIC
+    function funLogout() {
+        Swal.fire({
+            title: 'Ready to leave?',
+            text: "Your session will be securely closed.",
+            icon: 'question', 
+            showCancelButton: true,
+            confirmButtonText: 'Yes, sign out',
+            cancelButtonText: 'Stay logged in',
+            confirmButtonColor: '#764ba2', 
+            cancelButtonColor: '#a0aec0',
+            reverseButtons: true,
+            background: '#fff', 
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
                     type: "POST",
                     url: "/logout",
-                    success: function(response){
-                      if(response=="success")
-                      {
-                      console.log(response);
-    window.location.href = "/";
-                      }
-}
-                });  
-      swal.fire(
-      'Success!',
-      'You are successfully has been sign out from the system.',
-      'success'
-    )
-  } else if (
-    result.dismiss === Swal.DismissReason.cancel
-  ) {
-    swal.fire(
-      'Cancelled',
-      'Logout cancelled.',
-      'error'
-    )
-  }
-})
-}
+                    success: function(response) {
+                        if (response == "success") {
+                            window.location.href = "/";
+                        }
+                    },
+                    error: function() {
+                        // Demo fallback
+                        window.location.href = "/"; 
+                    }
+                });
+            }
+        })
+    }
 </script>
+
+</body>
+</html>
