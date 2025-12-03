@@ -780,7 +780,9 @@ def deldispques():
 			return render_template("deldispquesPQA.html", callresults = callresults, tid = tidoption)
 		else:
 			flash("Some Error Occured!")
-			return redirect(url_for('/deltidlist'))
+			return redirect(url_for('deltidlist'))
+	flash('Please select a test ID to view questions.', 'info')
+	return redirect(url_for('deltidlist'))
 
 @app.route('/delete_questions/<testid>', methods=['GET', 'POST'])
 @user_role_professor
@@ -848,7 +850,7 @@ def delete_questions(testid):
 				return resp
 	else:
 		flash("Some Error Occured!")
-		return redirect(url_for('/deltidlist'))
+		return redirect(url_for('deltidlist'))
 
 @app.route('/<testid>/<qid>')
 @user_role_professor
@@ -862,7 +864,7 @@ def del_qid(testid, qid):
 		cur.close()
 		return render_template("deldispques.html", success=msg)
 	else:
-		return redirect(url_for('/deldispques'))
+		return redirect(url_for('deldispques'))
 
 @app.route('/updatetidlist', methods=['GET'])
 @user_role_professor
@@ -1821,11 +1823,17 @@ def test_generate():
 		if testType == "objective":
 			objective_generator = ObjectiveTest(inputText,noOfQues)
 			question_list, answer_list = objective_generator.generate_test()
+			if not question_list:
+				flash('Could not generate enough objective questions from the supplied text. Try adding more detailed content or lowering the question count.', 'warning')
+				return redirect(url_for('generate_test'))
 			testgenerate = zip(question_list, answer_list)
 			return render_template('generatedtestdata.html', cresults = testgenerate)
 		elif testType == "subjective":
 			subjective_generator = SubjectiveTest(inputText,noOfQues)
 			question_list, answer_list = subjective_generator.generate_test()
+			if not question_list:
+				flash('Could not generate enough subjective questions from the supplied text. Try adding more detailed content or lowering the question count.', 'warning')
+				return redirect(url_for('generate_test'))
 			testgenerate = zip(question_list, answer_list)
 			return render_template('generatedtestdata.html', cresults = testgenerate)
 		else:
