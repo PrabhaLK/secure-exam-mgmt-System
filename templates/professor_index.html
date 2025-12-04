@@ -1,27 +1,118 @@
 {% extends 'professor_dashboard.html' %}
 
 {% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 <style>
-.prof-dashboard-wrapper { padding-top: 1rem; padding-bottom: 2.5rem; }
-.prof-hero { background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 0.9rem; color: #fff; padding: 2rem 2.5rem; position: relative; overflow: hidden; box-shadow: 0 22px 48px rgba(99, 102, 241, 0.28); }
-.prof-hero::after { content: ""; position: absolute; inset: 15% -35% -35% 70%; background: rgba(255, 255, 255, 0.18); filter: blur(4px); border-radius: 50%; }
-.prof-hero h1 { font-weight: 700; }
-.prof-hero p { opacity: 0.92; }
-.prof-hero .hero-actions .btn { min-width: 170px; }
-.prof-stats .card { border: none; border-radius: 0.85rem; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1); }
-.prof-stats .card-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; }
-.prof-stats .display-4 { font-size: 2.2rem; margin-bottom: 0.35rem; }
-.prof-quick-card, .prof-planning-card { border: none; border-radius: 0.85rem; box-shadow: 0 20px 38px rgba(15, 23, 42, 0.08); }
-.prof-quick-card .list-group-item { border: none; border-bottom: 1px solid rgba(226, 232, 240, 0.85); padding: 0.9rem 0; }
-.prof-quick-card .list-group-item:last-child { border-bottom: none; }
-.prof-quick-card .list-group-item i { width: 1.5rem; }
-.prof-resource-tile { border-radius: 0.75rem; border: 1px solid rgba(226, 232, 240, 0.85); padding: 1.1rem 1.25rem; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.prof-resource-tile:hover { transform: translateY(-4px); box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08); }
-@media (max-width: 991.98px) {
-    .prof-hero { padding: 1.9rem; text-align: center; }
-    .prof-hero::after { display: none; }
-    .prof-hero .hero-actions { justify-content: center !important; }
-}
+    .prof-dashboard-wrapper {
+        padding-top: 1rem;
+        padding-bottom: 2.5rem;
+    }
+
+    .prof-hero {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-radius: 0.9rem;
+        color: #fff;
+        padding: 2rem 2.5rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 22px 48px rgba(99, 102, 241, 0.28);
+    }
+
+    .prof-hero::after {
+        content: "";
+        position: absolute;
+        inset: 15% -35% -35% 70%;
+        background: rgba(255, 255, 255, 0.18);
+        filter: blur(4px);
+        border-radius: 50%;
+    }
+
+    .prof-hero h1 {
+        font-weight: 700;
+    }
+
+    .prof-hero p {
+        opacity: 0.92;
+    }
+
+    .prof-hero .hero-actions .btn {
+        min-width: 170px;
+    }
+
+    .prof-stats .card {
+        border: none;
+        border-radius: 0.85rem;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        /* Add this line */
+    }
+
+    .prof-stats .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
+    }
+
+    .prof-stats .card-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+    }
+
+    .prof-stats .display-4 {
+        font-size: 2.2rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .prof-quick-card,
+    .prof-planning-card {
+        border: none;
+        border-radius: 0.85rem;
+        box-shadow: 0 20px 38px rgba(15, 23, 42, 0.08);
+    }
+
+    .prof-quick-card .list-group-item {
+        border: none;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+        padding: 0.9rem 0;
+    }
+
+    .prof-quick-card .list-group-item:last-child {
+        border-bottom: none;
+    }
+
+    .prof-quick-card .list-group-item i {
+        width: 1.5rem;
+    }
+
+    .prof-resource-tile {
+        border-radius: 0.75rem;
+        border: 1px solid rgba(226, 232, 240, 0.85);
+        padding: 1.1rem 1.25rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .prof-resource-tile:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    @media (max-width: 991.98px) {
+        .prof-hero {
+            padding: 1.9rem;
+            text-align: center;
+        }
+
+        .prof-hero::after {
+            display: none;
+        }
+
+        .prof-hero .hero-actions {
+            justify-content: center !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -31,14 +122,18 @@
         <div class="row align-items-center">
             <div class="col-lg-7 mb-4 mb-lg-0">
                 <h1 class="h2 mb-3">Welcome back, {{ session.name }} 👋</h1>
-                <p class="lead mb-4">Create assessments, monitor exam activity, and keep your cohort on track from a unified control centre.</p>
+                <p class="lead mb-4">Create assessments, monitor exam activity, and keep your cohort on track from a
+                    unified control centre.</p>
                 <div class="hero-actions d-flex flex-wrap align-items-center">
-                    <a href="/create-test" class="btn btn-light text-primary font-weight-bold mr-3 mb-2">Build Objective Exam</a>
-                    <a href="/livemonitoringtid" class="btn btn-outline-light font-weight-bold mb-2">Open Live Monitoring</a>
+                    <a href="/create-test" class="btn btn-light text-primary font-weight-bold mr-3 mb-2">Build Objective
+                        Exam</a>
+                    <a href="/livemonitoringtid" class="btn btn-outline-light font-weight-bold mb-2">Open Live
+                        Monitoring</a>
                 </div>
             </div>
             <div class="col-lg-5 text-center">
-                <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_6g3qjzsc.json" background="transparent" speed="1" style="width:320px;height:220px;" loop autoplay></lottie-player>
+                <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_6g3qjzsc.json"
+                    background="transparent" speed="1" style="width:320px;height:220px;" loop autoplay></lottie-player>
             </div>
         </div>
     </div>
@@ -91,14 +186,16 @@
                             </div>
                             <div>
                                 <h6 class="mb-1">Machine Learning – Practical Viva</h6>
-                                <small class="text-muted">18 Jun &bull; 10:00 AM &bull; 120 Minutes &bull; Room: Virtual Lab A</small>
+                                <small class="text-muted">18 Jun &bull; 10:00 AM &bull; 120 Minutes &bull; Room: Virtual
+                                    Lab A</small>
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <div class="border rounded p-3 h-100">
-                                <p class="text-muted mb-1"><i class="fas fa-clipboard-list mr-2 text-primary"></i>Preparation checklist</p>
+                                <p class="text-muted mb-1"><i
+                                        class="fas fa-clipboard-list mr-2 text-primary"></i>Preparation checklist</p>
                                 <ul class="list-unstyled mb-0 small text-muted">
                                     <li>• Upload question banks to Objective/Subjective pools</li>
                                     <li>• Verify proctor availability and backup observer</li>
@@ -108,7 +205,8 @@
                         </div>
                         <div class="col-md-6">
                             <div class="border rounded p-3 h-100">
-                                <p class="text-muted mb-1"><i class="fas fa-tools mr-2 text-primary"></i>Tools checklist</p>
+                                <p class="text-muted mb-1"><i class="fas fa-tools mr-2 text-primary"></i>Tools checklist
+                                </p>
                                 <ul class="list-unstyled mb-0 small text-muted">
                                     <li>• Configure AI flags for suspicious behaviour</li>
                                     <li>• Confirm screen recording storage quota</li>
@@ -119,7 +217,8 @@
                     </div>
                     <div class="mt-4 d-flex flex-wrap">
                         <a href="/generate_test" class="btn btn-primary mr-3 mb-2">Generate question set</a>
-                        <a href="/{{session.email}}/disptests" class="btn btn-outline-primary mb-2">Review exam history</a>
+                        <a href="/{{session.email}}/disptests" class="btn btn-outline-primary mb-2">Review exam
+                            history</a>
                     </div>
                 </div>
             </div>
@@ -129,25 +228,30 @@
                 <div class="card-body">
                     <h5 class="card-title mb-3">Quick Actions</h5>
                     <div class="list-group list-group-flush">
-                        <a href="/create_test_lqa" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="/create_test_lqa"
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-pencil-alt text-primary mr-2"></i>Create subjective exam</span>
                             <i class="fas fa-chevron-right text-muted"></i>
                         </a>
-                        <a href="/create_test_pqa" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="/create_test_pqa"
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-code text-success mr-2"></i>Set up practical task</span>
                             <i class="fas fa-chevron-right text-muted"></i>
                         </a>
-                        <a href="/viewstudentslogs" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-user-shield text-warning mr-2"></i>Monitor student behaviour</span>
+                        <a href="/viewstudentslogs"
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-user text-warning mr-2"></i>Monitor student behaviour</span>
                             <i class="fas fa-chevron-right text-muted"></i>
                         </a>
-                        <a href="/{{session.email}}/tests-created" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="/{{session.email}}/tests-created"
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-chart-line text-info mr-2"></i>Analyse results trends</span>
                             <i class="fas fa-chevron-right text-muted"></i>
                         </a>
-                        <a href="/payment" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-receipt text-danger mr-2"></i>Manage billing &amp; invoices</span>
-                            <i class="fas fa-chevron-right text-muted"></i>
+                        <a href="/payment"
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-receipt text-danger mr-2"></i>Manage billing &amp; invoices</span>
+                            <i class="bi bi-chevron-right text-muted"></i>
                         </a>
                     </div>
                 </div>
@@ -172,8 +276,10 @@
                             <span class="text-muted small">8 min read</span>
                         </div>
                         <h6 class="mb-2">Best practices for remote invigilation</h6>
-                        <p class="text-muted small mb-3">Learn how to structure instructions and respond to automated alerts smoothly.</p>
-                        <a href="/report_professor" class="text-primary font-weight-bold small">Read document <i class="fas fa-arrow-right ml-1"></i></a>
+                        <p class="text-muted small mb-3">Learn how to structure instructions and respond to automated
+                            alerts smoothly.</p>
+                        <a href="/report_professor" class="text-primary font-weight-bold small">Read document <i
+                                class="fas fa-arrow-right ml-1"></i></a>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
@@ -183,8 +289,11 @@
                             <span class="text-muted small">6 min</span>
                         </div>
                         <h6 class="mb-2">Configuring AI flags for anomalies</h6>
-                        <p class="text-muted small mb-3">Step-by-step video on calibrating sensitivity for different exam types.</p>
-                        <a href="https://www.youtube.com" target="_blank" class="text-primary font-weight-bold small">Watch now <i class="fas fa-arrow-right ml-1"></i></a>
+                        <p class="text-muted small mb-3">Step-by-step video on calibrating sensitivity for different
+                            exam types.</p>
+                        <a href="https://www.youtube.com" target="_blank"
+                            class="text-primary font-weight-bold small">Watch now <i
+                                class="fas fa-arrow-right ml-1"></i></a>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
@@ -194,8 +303,10 @@
                             <span class="text-muted small">Download</span>
                         </div>
                         <h6 class="mb-2">Incident escalation checklist</h6>
-                        <p class="text-muted small mb-3">Keep this template ready for rapid documentation of exam irregularities.</p>
-                        <a href="/{{session.email}}/tests-created" class="text-primary font-weight-bold small">Download PDF <i class="fas fa-arrow-right ml-1"></i></a>
+                        <p class="text-muted small mb-3">Keep this template ready for rapid documentation of exam
+                            irregularities.</p>
+                        <a href="/{{session.email}}/tests-created" class="text-primary font-weight-bold small">Download
+                            PDF <i class="fas fa-arrow-right ml-1"></i></a>
                     </div>
                 </div>
             </div>
