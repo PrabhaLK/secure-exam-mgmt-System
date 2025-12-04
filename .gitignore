@@ -4,4 +4,4 @@ __pycache__/
 venv36/
 gaze_tracking/
 .DS_Store
-__pycache__/
+*.pyc
