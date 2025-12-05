@@ -1,5 +1,7 @@
+import math
 import numpy as np
 import nltk as nlp
+import re
 
 class SubjectiveTest:
 
@@ -49,21 +51,51 @@ class SubjectiveTest:
                         question_answer_dict[temp] += sentence
         keyword_list = list(question_answer_dict.keys())
         if not keyword_list:
-            return [], []
+            return []
 
         question_answer = []
         pattern_count = len(self.question_pattern)
         for idx, key in enumerate(keyword_list):
-            question = self.question_pattern[idx % pattern_count] + key + "."
-            question_answer.append({"Question": question, "Answer": question_answer_dict[key]})
+            question = self._normalize_text(self.question_pattern[idx % pattern_count] + key + ".")
+            answer = self._normalize_text(question_answer_dict[key])
+            estimated_marks = self._estimate_marks(answer)
+            question_answer.append({
+                "Question": question,
+                "Answer": answer,
+                "Marks": estimated_marks
+            })
 
         available = len(question_answer)
         if available == 0:
-            return [], []
+            return []
 
         desired = int(self.noOfQues)
         take = min(desired, available)
         indices = np.atleast_1d(np.random.choice(available, take, replace=False))
-        que = [question_answer[i]["Question"] for i in indices]
-        ans = [question_answer[i]["Answer"] for i in indices]
-        return que, ans
+
+        rows = []
+        for row_number, selection in enumerate(indices, start=1):
+            qa = question_answer[int(selection)]
+            rows.append({
+                "qid": row_number,
+                "q": qa["Question"],
+                "marks": qa["Marks"],
+                "answer": qa["Answer"]
+            })
+
+        return rows
+
+    @staticmethod
+    def _normalize_text(text):
+        if not text:
+            return ""
+        cleaned = re.sub(r"\s+", " ", str(text).replace("\n", " "))
+        return cleaned.strip()
+
+    @staticmethod
+    def _estimate_marks(answer_text):
+        word_count = len(answer_text.split())
+        if word_count == 0:
+            return 1
+        base = math.ceil(word_count / 40)
+        return max(1, min(base, 10))

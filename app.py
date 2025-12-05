@@ -555,12 +555,20 @@ def create_test_lqa():
 		filestream.seek(0)
 		ef = pd.read_csv(filestream)
 		ef.columns = [str(col).strip().lower() for col in ef.columns]
+		column_aliases = {
+			'question': 'q'
+		}
+		ef = ef.rename(columns=column_aliases)
 		fields = ['qid','q','marks']
 		missing = [field for field in fields if field not in ef.columns]
 		if missing:
 			flash(f"Uploaded file is missing required columns: {', '.join(missing)}", 'danger')
 			return redirect(url_for('create_test_lqa'))
 		df = ef[fields].copy()
+		df['qid'] = df['qid'].apply(lambda value: str(value).strip() if pd.notnull(value) else '')
+		if not df['qid'].all():
+			df['qid'] = [str(idx) for idx in range(1, len(df) + 1)]
+		df['q'] = df['q'].fillna('').astype(str).str.strip()
 		df['marks'] = pd.to_numeric(df['marks'], errors='coerce').fillna(1).astype(int)
 		cur = mysql.connection.cursor()
 		ecc = examcreditscheck()
@@ -1866,22 +1874,22 @@ def test_generate():
 				('ans', 'Answer'),
 				('marks', 'Marks')
 			]
-			return render_template('generatedtestdata.html', table_headers=headers, table_rows=rows, table_title='Generated Objective Questions', csv_filename='objective_questions')
+			export_columns = list(range(len(headers)))
+			return render_template('generatedtestdata.html', table_headers=headers, table_rows=rows, table_title='Generated Objective Questions', csv_filename='objective_questions', export_columns=export_columns)
 		elif testType == "subjective":
 			subjective_generator = SubjectiveTest(inputText,noOfQues)
-			question_list, answer_list = subjective_generator.generate_test()
-			rows = []
-			for idx, (question, answer) in enumerate(zip(question_list, answer_list), start=1):
-				rows.append({'question': question, 'answer': answer, 'qid': idx})
-			headers = [
-				('qid', 'QID'),
-				('question', 'Question'),
-				('answer', 'Answer')
-			]
+			rows = subjective_generator.generate_test()
 			if not rows:
 				flash('Unable to generate subjective questions from the provided text. Please try again with more detailed content.', 'warning')
 				return redirect(url_for('generate_test'))
-			return render_template('generatedtestdata.html', table_headers=headers, table_rows=rows, table_title='Generated Subjective Questions', csv_filename='subjective_questions')
+			headers = [
+				('qid', 'QID'),
+				('q', 'Question'),
+				('marks', 'Marks'),
+				('answer', 'Answer')
+			]
+			export_columns = [0, 1, 2]
+			return render_template('generatedtestdata.html', table_headers=headers, table_rows=rows, table_title='Generated Subjective Questions', csv_filename='subjective_questions', export_columns=export_columns)
 		else:
 			return None
 

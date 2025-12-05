@@ -45,10 +45,16 @@
         var $table = $('#generated-table');
         if ($table.length) {
             var exportName = '{{ csv_filename if csv_filename else "generated_questions" }}';
+            var exportColumns = {{ export_columns|tojson if export_columns is not none else 'null' }};
+            var csvButton = { extend: 'csv', title: exportName };
+            if (exportColumns) {
+                csvButton.exportOptions = { columns: exportColumns };
+            }
+
             $table.DataTable({
                 dom: 'Bfrtip',
                 buttons: [
-                    { extend: 'csv', title: exportName },
+                    csvButton,
                     'copy', 'excel', 'pdf', 'print'
                 ],
                 pageLength: 25,
