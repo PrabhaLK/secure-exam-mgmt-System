@@ -1,44 +1,60 @@
 {% extends 'professor_dashboard.html' %}
 {% block body %}
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card border-light shadow-sm">
-                    <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col">
-                            <h2 class="h5">Generated Q&A</h2>
-                            </div>
-                        </div>
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card border-light shadow-sm">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h2 class="h5">{{ table_title if table_title else 'Generated Q&A' }}</h2>
                     </div>
-                    <div class="table-responsive">
-                        <table id="example" class="table align-items-center table-flush">
-                            <thead>
-                                <th>Question</th>
-                                <th>Answer</th>
-                            </thead>
-                <tbody>
-              
-{% for qa in cresults %}
-    <tr>
-          <td>{{ qa[0] }}</td>
-          <td>{{ qa[1] }}</td>
-    </tr>
-{% endfor %}
-
-</tbody>
-            </table>
-        </div>
-    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if table_rows %}
+                <div class="table-responsive">
+                    <table id="generated-table" class="table align-items-center table-flush">
+                        <thead class="thead-light">
+                            <tr>
+                                {% for header in table_headers %}
+                                <th>{{ header[1] }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in table_rows %}
+                            <tr>
+                                {% for header in table_headers %}
+                                <td>{{ row[header[0]] }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted mt-3 mb-0">Use the CSV button above the table to download a template formatted file for uploading an exam.</p>
+                {% else %}
+                <p class="mb-0">No data generated. Please go back and try again with different input.</p>
+                {% endif %}
             </div>
         </div>
-            <script>
-                $(document).ready(function() {
-                $('#example').DataTable( {
-                    dom: 'Bfrtip',
-                    buttons: [
-                        'copy', 'csv', 'excel', 'pdf', 'print'
-                    ]
-                } );
-            } );
-            </script>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        var $table = $('#generated-table');
+        if ($table.length) {
+            var exportName = '{{ csv_filename if csv_filename else "generated_questions" }}';
+            $table.DataTable({
+                dom: 'Bfrtip',
+                buttons: [
+                    { extend: 'csv', title: exportName },
+                    'copy', 'excel', 'pdf', 'print'
+                ],
+                pageLength: 25,
+                ordering: false
+            });
+        }
+    });
+</script>
 {% endblock %}

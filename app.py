@@ -554,13 +554,19 @@ def create_test_lqa():
 		filestream = form.doc.data
 		filestream.seek(0)
 		ef = pd.read_csv(filestream)
+		ef.columns = [str(col).strip().lower() for col in ef.columns]
 		fields = ['qid','q','marks']
-		df = pd.DataFrame(ef, columns = fields)
+		missing = [field for field in fields if field not in ef.columns]
+		if missing:
+			flash(f"Uploaded file is missing required columns: {', '.join(missing)}", 'danger')
+			return redirect(url_for('create_test_lqa'))
+		df = ef[fields].copy()
+		df['marks'] = pd.to_numeric(df['marks'], errors='coerce').fillna(1).astype(int)
 		cur = mysql.connection.cursor()
 		ecc = examcreditscheck()
 		if ecc:
 			for row in df.index:
-				cur.execute('INSERT INTO longqa(test_id,qid,q,marks,uid) values(%s,%s,%s,%s,%s)', (test_id, df['qid'][row], df['q'][row], df['marks'][row], session['uid']))
+				cur.execute('INSERT INTO longqa(test_id,qid,q,marks,uid) values(%s,%s,%s,%s,%s)', (test_id, df['qid'][row], df['q'][row], int(df['marks'][row]), session['uid']))
 				cur.connection.commit()
 				
 			start_date = form.start_date.data
@@ -630,13 +636,37 @@ def create_test():
 		filestream = form.doc.data
 		filestream.seek(0)
 		ef = pd.read_csv(filestream)
+		ef.columns = [str(col).strip().lower() for col in ef.columns]
+		column_aliases = {
+			'question': 'q',
+			'answer': 'ans'
+		}
+		ef = ef.rename(columns=column_aliases)
 		fields = ['qid','q','a','b','c','d','ans','marks']
-		df = pd.DataFrame(ef, columns = fields)
+		missing = [field for field in fields if field not in ef.columns]
+		if missing:
+			flash(f"Uploaded file is missing required columns: {', '.join(missing)}", 'danger')
+			return redirect(url_for('create_test'))
+		df = ef[fields].copy()
+		df['qid'] = df['qid'].apply(lambda value: str(value).strip() if pd.notnull(value) else '')
+		if not df['qid'].all():
+			df['qid'] = [str(idx) for idx in range(1, len(df) + 1)]
+		text_columns = ['q', 'a', 'b', 'c', 'd']
+		for column in text_columns:
+			df[column] = df[column].fillna('').astype(str).str.strip()
+		df['ans'] = df['ans'].fillna('').astype(str).str.strip().str.lower()
+		df['marks'] = pd.to_numeric(df['marks'], errors='coerce').fillna(1).astype(int)
+		df['ans'] = df['ans'].replace({'1': 'a', '2': 'b', '3': 'c', '4': 'd'})
+		valid_answers = {'a', 'b', 'c', 'd'}
+		invalid_rows = df[~df['ans'].isin(valid_answers)].index.tolist()
+		if invalid_rows:
+			flash('Some rows have invalid answer keys. Please ensure answers are one of a, b, c, or d.', 'danger')
+			return redirect(url_for('create_test'))
 		cur = mysql.connection.cursor()
 		ecc = examcreditscheck()
 		if ecc:
 			for row in df.index:
-				cur.execute('INSERT INTO questions(test_id,qid,q,a,b,c,d,ans,marks,uid) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', (test_id, df['qid'][row], df['q'][row], df['a'][row], df['b'][row], df['c'][row], df['d'][row], df['ans'][row], df['marks'][row], session['uid']))
+				cur.execute('INSERT INTO questions(test_id,qid,q,a,b,c,d,ans,marks,uid) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', (test_id, df['qid'][row], df['q'][row], df['a'][row], df['b'][row], df['c'][row], df['d'][row], df['ans'][row], int(df['marks'][row]), session['uid']))
 				cur.connection.commit()
 
 			start_date = form.start_date.data
@@ -757,6 +787,8 @@ def deltidlist():
 @app.route('/deldispques', methods=['GET','POST'])
 @user_role_professor
 def deldispques():
+	if request.method == 'GET':
+		return redirect(url_for('deltidlist'))
 	if request.method == 'POST':
 		tidoption = request.form['choosetid']
 		et = examtypecheck(tidoption)
@@ -1820,14 +1852,36 @@ def test_generate():
 		noOfQues = request.form["noq"]
 		if testType == "objective":
 			objective_generator = ObjectiveTest(inputText,noOfQues)
-			question_list, answer_list = objective_generator.generate_test()
-			testgenerate = zip(question_list, answer_list)
-			return render_template('generatedtestdata.html', cresults = testgenerate)
+			rows = objective_generator.generate_test()
+			if not rows:
+				flash('Unable to generate objective questions from the provided text. Please try again with more detailed content.', 'warning')
+				return redirect(url_for('generate_test'))
+			headers = [
+				('qid', 'QID'),
+				('q', 'Question'),
+				('a', 'A'),
+				('b', 'B'),
+				('c', 'C'),
+				('d', 'D'),
+				('ans', 'Answer'),
+				('marks', 'Marks')
+			]
+			return render_template('generatedtestdata.html', table_headers=headers, table_rows=rows, table_title='Generated Objective Questions', csv_filename='objective_questions')
 		elif testType == "subjective":
 			subjective_generator = SubjectiveTest(inputText,noOfQues)
 			question_list, answer_list = subjective_generator.generate_test()
-			testgenerate = zip(question_list, answer_list)
-			return render_template('generatedtestdata.html', cresults = testgenerate)
+			rows = []
+			for idx, (question, answer) in enumerate(zip(question_list, answer_list), start=1):
+				rows.append({'question': question, 'answer': answer, 'qid': idx})
+			headers = [
+				('qid', 'QID'),
+				('question', 'Question'),
+				('answer', 'Answer')
+			]
+			if not rows:
+				flash('Unable to generate subjective questions from the provided text. Please try again with more detailed content.', 'warning')
+				return redirect(url_for('generate_test'))
+			return render_template('generatedtestdata.html', table_headers=headers, table_rows=rows, table_title='Generated Subjective Questions', csv_filename='subjective_questions')
 		else:
 			return None
 

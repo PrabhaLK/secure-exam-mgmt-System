@@ -1,9 +1,19 @@
+import random
 import re
 import nltk
 import numpy as np
 from nltk.corpus import wordnet as wn
 
 class ObjectiveTest:
+
+    FALLBACK_DISTRACTORS = [
+        "Resource Pool",
+        "Control Plane",
+        "Infrastructure Node",
+        "Service Layer",
+        "Compute Cluster",
+        "Baseline Module"
+    ]
 
     def __init__(self, filepath, noOfQues):
         
@@ -117,7 +127,7 @@ class ObjectiveTest:
             question_answer = list(trivial_pair)
 
         if not question_answer:
-            return [], []
+            return []
 
         unique_questions = {}
         for qa in question_answer:
@@ -128,8 +138,97 @@ class ObjectiveTest:
 
         available = len(question_answer)
         take = min(desired, available)
+        if take == 0:
+            return []
+
         indices = np.atleast_1d(np.random.choice(available, take, replace=False))
 
-        questions = [question_answer[i]["Question"] for i in indices]
-        answers = [question_answer[i]["Answer"] for i in indices]
-        return questions, answers
+        rows = []
+        for idx, selection in enumerate(indices, start=1):
+            qa = question_answer[int(selection)]
+            question_text = self._normalize_text(qa.get("Question", ""))
+            answer_text = self._normalize_text(qa.get("Answer", ""))
+            similar = qa.get("Similar", []) or []
+
+            options, correct_label = self._build_options(answer_text, similar)
+            row = {
+                "qid": idx,
+                "q": question_text,
+                "a": options[0],
+                "b": options[1],
+                "c": options[2],
+                "d": options[3],
+                "ans": correct_label,
+                "marks": 1
+            }
+            rows.append(row)
+
+        return rows
+
+    @staticmethod
+    def _normalize_text(value):
+        if not value:
+            return ""
+        cleaned = value.replace("\n", " ")
+        cleaned = re.sub(r"\s+", " ", cleaned)
+        return cleaned.strip()
+
+    def _build_options(self, answer, similar):
+        seen = {answer.lower()}
+        distractors = []
+
+        def try_add(candidate):
+            normalized = self._normalize_text(candidate)
+            if not normalized:
+                return
+            if normalized.lower() in seen:
+                return
+            distractors.append(normalized)
+            seen.add(normalized.lower())
+
+        for candidate in similar:
+            try_add(candidate)
+            if len(distractors) == 3:
+                break
+
+        if len(distractors) < 3:
+            extra_sources = self._collect_additional_distractors(answer)
+            for candidate in extra_sources:
+                try_add(candidate)
+                if len(distractors) == 3:
+                    break
+
+        if len(distractors) < 3 and len(answer.split()) > 1:
+            tail_word = answer.split()[-1]
+            for candidate in self.answer_options(tail_word):
+                try_add(candidate)
+                if len(distractors) == 3:
+                    break
+
+        if len(distractors) < 3:
+            for fallback in self.FALLBACK_DISTRACTORS:
+                try_add(fallback)
+                if len(distractors) == 3:
+                    break
+
+        while len(distractors) < 3:
+            placeholder = f"Option {len(distractors) + 1}"
+            try_add(placeholder)
+
+        options = distractors[:3] + [answer]
+        random.shuffle(options)
+        correct_index = options.index(answer)
+        correct_label = chr(ord('a') + correct_index)
+        return options, correct_label
+
+    def _collect_additional_distractors(self, answer):
+        candidates = []
+        synsets = wn.synsets(answer)
+        for syn in synsets:
+            for lemma in syn.lemmas():
+                candidates.append(lemma.name())
+            for relation in syn.hypernyms() + syn.hyponyms() + syn.similar_tos():
+                for lemma in relation.lemmas():
+                    candidates.append(lemma.name())
+        cleaned = [candidate.replace('_', ' ') for candidate in candidates if candidate.lower() != answer.lower()]
+        return cleaned
