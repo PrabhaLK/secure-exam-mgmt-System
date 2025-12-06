@@ -1629,7 +1629,7 @@ def test(testid):
 			inputByStudent = request.form["inputByStudent"]
 			executedByStudent = request.form["executedByStudent"]
 			cur = mysql.connection.cursor()
-			insertStudentData = cur.execute('INSERT INTO practicaltest(email,test_id,qid,code,input,executed,uid) values(%s,%s,%s,%s,%s,%s,%s)', (session['email'], testid, "1", codeByStudent, inputByStudent, executedByStudent, session['uid']))
+			insertStudentData = cur.execute('INSERT INTO practicaltest(email,test_id,qid,code,input,executed,marks,uid) values(%s,%s,%s,%s,%s,%s,%s,%s)', (session['email'], testid, "1", codeByStudent, inputByStudent, executedByStudent, 0, session['uid']))
 			mysql.connection.commit()
 			if insertStudentData > 0:
 				insertStudentTestInfoData = cur.execute('UPDATE studentTestInfo set completed = 1 where test_id = %s and email = %s and uid = %s', (test_id, session['email'], session['uid']))
