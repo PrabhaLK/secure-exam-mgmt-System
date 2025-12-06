@@ -15,15 +15,17 @@
         <tr>
             <th scope="col">Sr No</th>
             <th scope="col">Name</th>
+            <th scope="col">Email</th>
             <th scope="col">Marks</th>
         </tr>
     </thead>
     <tbody>
         {% for result in data %}
             <tr>
-                <td>{{result[0]}}</td>
-                <td>{{result[1]}}</td>
-                <td>{{result[2]}}</td>
+                <td>{{ result[0] }}</td>
+                <td>{{ result[1] }}</td>
+                <td>{{ result[2] }}</td>
+                <td>{{ result[3] }}</td>
             </tr>
         {% endfor %}
     </tbody>

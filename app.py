@@ -408,13 +408,16 @@ def login():
 		user_type = request.form['user_type']
 		imgdata1 = request.form['image_hidden']
 		cur = mysql.connection.cursor()
-		results1 = cur.execute('SELECT uid, name, email, password, user_type, user_image from users where email = %s and user_type = %s and user_login = 0' , (email,user_type))
+		results1 = cur.execute('SELECT uid, name, email, password, user_type, user_image, user_login from users where email = %s and user_type = %s' , (email,user_type))
 		if results1 > 0:
 			cresults = cur.fetchone()
 			imgdata2 = cresults['user_image']
 			password = cresults['password']
 			name = cresults['name']
 			uid = cresults['uid']
+			if cresults.get('user_login') == 1:
+				cur.execute('UPDATE users set user_login = 0 where email = %s and user_type = %s', (email, user_type))
+				mysql.connection.commit()
 			nparr1 = np.frombuffer(base64.b64decode(imgdata1), np.uint8)
 			nparr2 = np.frombuffer(base64.b64decode(imgdata2), np.uint8)
 			image1 = cv2.imdecode(nparr1, cv2.COLOR_BGR2GRAY)
@@ -1687,11 +1690,11 @@ def check_result(email, testid):
 
 def neg_marks(email,testid,negm):
 	cur=mysql.connection.cursor()
-	results = cur.execute("select marks,q.qid as qid, \
-				q.ans as correct, ifnull(s.ans,0) as marked from questions q inner join \
-				students s on  s.test_id = q.test_id and s.test_id = %s \
-				and s.email = %s and s.qid = q.qid group by q.qid \
-				order by q.qid asc", (testid, email))
+	results = cur.execute("select q.marks as marks, q.qid as qid, \
+			q.ans as correct, ifnull(s.ans,0) as marked from questions q inner join \
+			students s on  s.test_id = q.test_id and s.test_id = %s \
+			and s.email = %s and s.qid = q.qid \
+			order by LPAD(lower(q.qid),10,0) asc", (testid, email))
 	data=cur.fetchall()
 
 	sum=0.0
@@ -1795,9 +1798,7 @@ def student_results(email, testid):
 				count = 1
 				for user in results:
 					score = marks_calc(user['email'], user['test_id'])
-					user['srno'] = count
-					user['marks'] = score
-					final.append([count, user['name'], score])
+					final.append([count, user['name'], user['email'], score])
 					names.append(user['name'])
 					scores.append(score)
 					count+=1
