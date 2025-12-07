@@ -1,0 +1,138 @@
+<footer class="app-footer mt-5">
+  <div class="app-footer__glow"></div>
+  <div class="container py-5">
+    <div class="row gy-4 align-items-start">
+      <div class="col-lg-5">
+        <span class="app-footer__logo">MyProctor<span>.ai</span></span>
+        <p class="app-footer__copy">Remote proctoring that keeps academic integrity strong and exam stress light.</p>
+      </div>
+      <div class="col-lg-7">
+        <div class="row g-4">
+          <div class="col-sm-6">
+            <h6 class="app-footer__heading">Explore</h6>
+            <ul class="app-footer__nav list-unstyled">
+              <li><a class="app-footer__link" href="{{ url_for('index') }}">Home</a></li>
+              <li><a class="app-footer__link" href="{{ url_for('faq') }}">FAQs</a></li>
+              <li><a class="app-footer__link" href="{{ url_for('contact') }}">Contact</a></li>
+            </ul>
+          </div>
+          <div class="col-sm-6">
+            <h6 class="app-footer__heading">Support</h6>
+            <ul class="app-footer__nav list-unstyled">
+              <li><a class="app-footer__link" href="{{ url_for('report_professor') }}">Report an Issue</a></li>
+              <li><a class="app-footer__link" href="mailto:support@myproctor.ai">support@myproctor.ai</a></li>
+              <li><span class="app-footer__tag">Available 9am – 6pm IST</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="app-footer__divider my-4">
+    <div class="app-footer__bottom d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+      <span class="app-footer__meta">&copy; <span id="app-footer-year">2025</span> MyProctor.ai. All rights reserved.</span>
+      <span class="app-footer__meta">Crafted with <span class="app-footer__heart">&#10084;</span> by <a class="app-footer__link" href="https://www.narenderkeswani.com/" target="_blank" rel="noopener">PrabhaLK Devs</a></span>
+    </div>
+  </div>
+</footer>
+
+<style>
+.app-footer {
+  position: relative;
+  background: linear-gradient(145deg, #0c1424 0%, #141f36 44%, #1d2b4a 100%);
+  color: #e6edff;
+  border-top: 1px solid rgba(130, 145, 189, 0.25);
+  overflow: hidden;
+}
+.app-footer__glow {
+  position: absolute;
+  inset: auto -25% 35% -25%;
+  height: 280px;
+  background: radial-gradient(circle at 50% 0%, rgba(102, 126, 234, 0.35), transparent 55%),
+              radial-gradient(circle at 85% 30%, rgba(118, 214, 255, 0.22), transparent 60%),
+              radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.25), transparent 60%);
+  filter: blur(60px);
+  opacity: 0.85;
+  pointer-events: none;
+}
+.app-footer__logo {
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+}
+.app-footer__logo span {
+  color: #7dd3fc;
+}
+.app-footer__copy {
+  max-width: 340px;
+  color: rgba(230, 237, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+.app-footer__heading {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+  margin-bottom: 0.85rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+.app-footer__nav li {
+  margin-bottom: 0.45rem;
+}
+.app-footer__link {
+  color: rgba(230, 237, 255, 0.76);
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+}
+.app-footer__link:hover,
+.app-footer__link:focus {
+  color: #7dd3fc;
+  text-decoration: none;
+}
+.app-footer__tag {
+  font-size: 0.85rem;
+  color: rgba(230, 237, 255, 0.62);
+}
+.app-footer__divider {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.app-footer__meta {
+  font-size: 0.85rem;
+  color: rgba(230, 237, 255, 0.65);
+}
+.app-footer__heart {
+  color: #ff7aa8;
+}
+.app-footer__bottom {
+  row-gap: 0.6rem;
+}
+
+@media (max-width: 575.98px) {
+  .app-footer {
+    margin-top: 2rem;
+  }
+  .app-footer__logo {
+    font-size: 1.35rem;
+  }
+}
+</style>
+<script>
+(function() {
+  var yearHolder = document.getElementById('app-footer-year');
+  if (yearHolder) {
+    yearHolder.textContent = new Date().getFullYear();
+  }
+})();
+</script>
+<script>
+(function() {
+  var yearHolder = document.getElementById('app-footer-year');
+  if (yearHolder) {
+    yearHolder.textContent = new Date().getFullYear();
+  }
+})();
+</script>

@@ -97,13 +97,5 @@ else
   document.getElementById('livecheck').style.display = "block"
 }
     </script>
-  <footer id="sticky-footer" class="py-4">
-    <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
-                  <p class="font-weight-bold font-medium mb-0">Copyright © MyProctor.ai
-                      <span class="current-year"><scrip>document.write(new Date().getFullYear())</scrip></span>. All rights reserved.</p>
-    </div><br>
-    <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
-          <p class="font-weight-bold font-small mb-0"><span>Made with &#128151 By PrabhaLK Devs</span></p>
-  </div>
-  </footer>
+  {% include 'includes/_footer.html' %}
 {% endblock %}
