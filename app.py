@@ -223,7 +223,7 @@ def user_role_student(f):
 
 
 def _build_exam_countdown(start_dt, end_dt):
-	now = datetime.utcnow()
+	now = datetime.now()
 	if isinstance(start_dt, datetime) and isinstance(end_dt, datetime) and start_dt <= now <= end_dt:
 		return "Live now", "live"
 	if isinstance(end_dt, datetime) and end_dt < now:
@@ -300,6 +300,7 @@ def _calculate_average_for_tests(email, completed_tests):
 	return (total_percentage / counted) if counted else None
 
 
+
 def _fetch_next_exam_details(email, uid):
 	cur = mysql.connection.cursor()
 	cur.execute('''
@@ -312,7 +313,7 @@ def _fetch_next_exam_details(email, uid):
 	cur.close()
 	if not assignments:
 		return None
-	now = datetime.utcnow()
+	now = datetime.now()
 	live, upcoming, fallback = [], [], []
 	for row in assignments:
 		start_dt = row.get('start')
@@ -445,7 +446,7 @@ def _get_practical_score(test_id, student_email):
 def _select_professor_next_assessment(tests):
 	if not tests:
 		return None
-	now = datetime.utcnow()
+	now = datetime.now()
 	live = []
 	upcoming = []
 	fallback = []
@@ -825,7 +826,7 @@ def professor_index():
 	cur.close()
 
 	upcoming_assessment = _select_professor_next_assessment(tests)
-	now = datetime.utcnow()
+	now = datetime.now()
 	active_tests = []
 	for test in tests:
 		start_dt = test.get('start')
