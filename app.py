@@ -40,6 +40,11 @@ FACE_MODEL_CANDIDATES = [
 	("VGG-Face", 0.40),
 ]
 
+PROCTORING_TYPE_LABELS = {
+	0: "AI Monitoring",
+	1: "Live Monitoring",
+}
+
 
 def _load_face_model():
 	for model_name, threshold in FACE_MODEL_CANDIDATES:
@@ -221,6 +226,8 @@ def _build_exam_countdown(start_dt, end_dt):
 	now = datetime.utcnow()
 	if isinstance(start_dt, datetime) and isinstance(end_dt, datetime) and start_dt <= now <= end_dt:
 		return "Live now", "live"
+	if isinstance(end_dt, datetime) and end_dt < now:
+		return "Completed", "completed"
 	if isinstance(start_dt, datetime) and start_dt > now:
 		delta = start_dt - now
 		total_seconds = int(delta.total_seconds())
@@ -339,11 +346,13 @@ def _fetch_next_exam_details(email, uid):
 		"live": "badge badge-success text-uppercase",
 		"upcoming": "badge badge-warning text-uppercase",
 		"pending": "badge badge-secondary text-uppercase",
+		"completed": "badge badge-info text-uppercase",
 	}
 	badge_text_map = {
 		"live": "Live now",
 		"upcoming": "Scheduled",
 		"pending": "Pending",
+		"completed": "Completed",
 	}
 	start_date_label = start_dt.strftime('%d %b') if start_dt else None
 	start_time_label = start_dt.strftime('%I:%M %p').lstrip('0') if start_dt else None
@@ -374,6 +383,234 @@ def _fetch_next_exam_details(email, uid):
 		"duration_label": duration_label,
 		"meta_line": meta_line,
 	}
+
+
+def _get_test_participation(test_id):
+	cur = mysql.connection.cursor()
+	cur.execute('SELECT email, completed FROM studenttestinfo WHERE test_id = %s', (test_id,))
+	rows = cur.fetchall()
+	cur.close()
+	enrolled = set()
+	completed = set()
+	for row in rows:
+		email = row.get('email')
+		if not email:
+			continue
+		enrolled.add(email)
+		if row.get('completed') == 1:
+			completed.add(email)
+	return enrolled, completed
+
+
+def _get_objective_total_marks(test_id):
+	cur = mysql.connection.cursor()
+	cur.execute('SELECT SUM(marks) AS total_marks FROM questions WHERE test_id = %s', (test_id,))
+	row = cur.fetchone()
+	cur.close()
+	return row['total_marks'] if row and row['total_marks'] is not None else 0
+
+
+def _get_subjective_total_marks(test_id):
+	cur = mysql.connection.cursor()
+	cur.execute('SELECT SUM(marks) AS total_marks FROM longqa WHERE test_id = %s', (test_id,))
+	row = cur.fetchone()
+	cur.close()
+	return row['total_marks'] if row and row['total_marks'] is not None else 0
+
+
+def _get_practical_total_marks(test_id):
+	cur = mysql.connection.cursor()
+	cur.execute('SELECT SUM(marks) AS total_marks FROM practicalqa WHERE test_id = %s', (test_id,))
+	row = cur.fetchone()
+	cur.close()
+	return row['total_marks'] if row and row['total_marks'] is not None else 0
+
+
+def _get_subjective_score(test_id, student_email):
+	cur = mysql.connection.cursor()
+	cur.execute('SELECT SUM(marks) AS obtained FROM longtest WHERE test_id = %s AND email = %s', (test_id, student_email))
+	row = cur.fetchone()
+	cur.close()
+	return row['obtained'] if row and row['obtained'] is not None else 0
+
+
+def _get_practical_score(test_id, student_email):
+	cur = mysql.connection.cursor()
+	cur.execute('SELECT SUM(marks) AS obtained FROM practicaltest WHERE test_id = %s AND email = %s', (test_id, student_email))
+	row = cur.fetchone()
+	cur.close()
+	return row['obtained'] if row and row['obtained'] is not None else 0
+
+
+def _select_professor_next_assessment(tests):
+	if not tests:
+		return None
+	now = datetime.utcnow()
+	live = []
+	upcoming = []
+	fallback = []
+	for test in tests:
+		start_dt = test.get('start')
+		end_dt = test.get('end')
+		if isinstance(start_dt, datetime) and isinstance(end_dt, datetime):
+			if start_dt <= now <= end_dt:
+				live.append(test)
+			elif start_dt > now:
+				upcoming.append(test)
+			else:
+				fallback.append(test)
+		else:
+			fallback.append(test)
+	if live:
+		pool = live
+		pool_type = 'live'
+	elif upcoming:
+		pool = upcoming
+		pool_type = 'upcoming'
+	elif fallback:
+		pool = fallback
+		pool_type = 'fallback'
+	else:
+		return None
+
+	def sort_key(record):
+		start_value = record.get('start')
+		return start_value if isinstance(start_value, datetime) else datetime.max
+
+	if pool_type == 'fallback':
+		candidate = max(pool, key=sort_key, default=None)
+	else:
+		candidate = min(pool, key=sort_key, default=None)
+
+	if not candidate:
+		return None
+
+	start_raw = candidate.get('start')
+	end_raw = candidate.get('end')
+	start_dt = start_raw if isinstance(start_raw, datetime) else None
+	end_dt = end_raw if isinstance(end_raw, datetime) else None
+	countdown_label, status = _build_exam_countdown(start_dt, end_dt)
+
+	enrolled_set, completed_set = _get_test_participation(candidate.get('test_id'))
+	enrolled_count = len(enrolled_set)
+	completed_count = len(completed_set)
+
+	subject = candidate.get('subject') or "Untitled exam"
+	topic = candidate.get('topic')
+	subject_line = subject if not topic else f"{subject} | {topic}"
+	test_type_label = (candidate.get('test_type') or "").title()
+	proctoring_label = PROCTORING_TYPE_LABELS.get(candidate.get('proctoring_type'), "AI Monitoring")
+	duration_value = candidate.get('duration')
+	duration_label = f"{duration_value} Minutes" if duration_value else None
+	start_date_label = start_dt.strftime('%d %b') if start_dt else None
+	start_time_label = start_dt.strftime('%I:%M %p').lstrip('0') if start_dt else None
+	meta_parts = []
+	if start_date_label:
+		meta_parts.append(start_date_label)
+	if start_time_label:
+		meta_parts.append(start_time_label)
+	if duration_label:
+		meta_parts.append(duration_label)
+	meta_line = " | ".join(meta_parts) if meta_parts else None
+
+	summary_bits = []
+	if test_type_label:
+		summary_bits.append(f"{test_type_label} exam")
+	summary_bits.append(proctoring_label)
+	summary = " | ".join(summary_bits)
+
+	assignment_message = "No students assigned yet"
+	if enrolled_count:
+		assignment_message = f"{enrolled_count} student{'s' if enrolled_count != 1 else ''} assigned"
+	completion_message = None
+	if completed_count:
+		completion_message = f"{completed_count} completed submission{'s' if completed_count != 1 else ''}"
+	detail_parts = [assignment_message]
+	if completion_message and completed_count != enrolled_count:
+		detail_parts.append(completion_message)
+	detail_summary = " | ".join(detail_parts)
+
+	badge_class_map = {
+		"live": "badge badge-success text-uppercase",
+		"upcoming": "badge badge-warning text-uppercase",
+		"pending": "badge badge-secondary text-uppercase",
+		"completed": "badge badge-info text-uppercase",
+	}
+	badge_text_map = {
+		"live": "Live now",
+		"upcoming": "Scheduled",
+		"pending": "Pending",
+		"completed": "Completed",
+	}
+
+	planning_message = "Review outcomes from your most recent exam."
+	if status == "live":
+		planning_message = "Monitor the live session and stay ready to support proctors."
+	elif status == "upcoming":
+		planning_message = f"Prepare resources for the upcoming {proctoring_label.lower()} session."
+
+	return {
+		"test_id": candidate.get('test_id'),
+		"subject_line": subject_line,
+		"summary": summary,
+		"details": detail_summary,
+		"countdown_label": countdown_label,
+		"status": status,
+		"badge_class": badge_class_map.get(status, "badge badge-secondary text-uppercase"),
+		"badge_text": badge_text_map.get(status, "Pending"),
+		"start_date_label": start_date_label,
+		"start_time_label": start_time_label,
+		"duration_label": duration_label,
+		"meta_line": meta_line,
+		"proctoring_label": proctoring_label,
+		"test_type_label": test_type_label,
+		"enrollment_count": enrolled_count,
+		"completed_count": completed_count,
+		"planning_message": planning_message,
+		"assignment_message": assignment_message,
+		"completion_message": completion_message,
+		"is_live": candidate.get('proctoring_type') == 1,
+	}
+
+
+def _calculate_professor_average_score(email, tests):
+	total_obtained = 0.0
+	total_possible = 0.0
+	for test in tests:
+		test_id = test.get('test_id')
+		test_type = (test.get('test_type') or "").lower()
+		if not test_id or not test_type:
+			continue
+		_, completed_students = _get_test_participation(test_id)
+		if not completed_students:
+			continue
+		if test_type == "objective":
+			total_marks = _get_objective_total_marks(test_id)
+			if not total_marks:
+				continue
+			for student_email in completed_students:
+				score = marks_calc(student_email, test_id) or 0.0
+				total_obtained += max(float(score), 0.0)
+				total_possible += float(total_marks)
+		elif test_type == "subjective":
+			total_marks = _get_subjective_total_marks(test_id)
+			if not total_marks:
+				continue
+			for student_email in completed_students:
+				obtained = _get_subjective_score(test_id, student_email)
+				total_obtained += float(obtained)
+				total_possible += float(total_marks)
+		elif test_type == "practical":
+			total_marks = _get_practical_total_marks(test_id)
+			if not total_marks:
+				continue
+			for student_email in completed_students:
+				obtained = _get_practical_score(test_id, student_email)
+				total_obtained += float(obtained)
+				total_possible += float(total_marks)
+	if total_possible == 0:
+		return None
+	return (total_obtained / total_possible) * 100.0
 
 @app.route("/config")
 @user_role_professor
@@ -576,7 +813,74 @@ def student_index():
 @app.route('/professor_index')
 @user_role_professor
 def professor_index():
-	return render_template('professor_index.html')
+	email = session.get('email')
+	uid = session.get('uid')
+	cur = mysql.connection.cursor()
+	cur.execute('''
+		SELECT test_id, subject, topic, test_type, start, end, duration, proctoring_type
+		FROM teachers
+		WHERE email = %s AND uid = %s
+	''', (email, uid))
+	tests = cur.fetchall()
+	cur.close()
+
+	upcoming_assessment = _select_professor_next_assessment(tests)
+	now = datetime.utcnow()
+	active_tests = []
+	for test in tests:
+		start_dt = test.get('start')
+		end_dt = test.get('end')
+		if isinstance(start_dt, datetime) and isinstance(end_dt, datetime) and start_dt <= now <= end_dt:
+			active_tests.append(test)
+	active_exam_count = len(active_tests)
+	active_exam_count_display = f"{active_exam_count:02d}"
+	if active_exam_count:
+		summaries = []
+		for test in active_tests[:2]:
+			subject = test.get('subject') or "Untitled exam"
+			test_type_label = (test.get('test_type') or "").title()
+			label = subject
+			if test_type_label:
+				label = f"{subject} ({test_type_label})"
+			summaries.append(label)
+		remaining = active_exam_count - len(summaries)
+		if remaining > 0:
+			summaries.append(f"+{remaining} more")
+		active_exam_message = " | ".join(summaries) + ". Monitor progress in real time."
+		active_exam_class = "text-primary"
+	else:
+		active_exam_message = "No exams running right now. You're all set."
+		active_exam_class = "text-muted"
+
+	average_score_percent = _calculate_professor_average_score(email, tests)
+	if average_score_percent is None:
+		average_score_display = "N/A"
+		average_score_message = "Once students submit exams, cohort averages will appear here."
+		average_score_class = "text-muted"
+	else:
+		average_score_display = f"{average_score_percent:.0f}%"
+		if average_score_percent >= 85:
+			average_score_message = "Outstanding results! Celebrate the cohort's progress."
+			average_score_class = "text-success"
+		elif average_score_percent >= 60:
+			average_score_message = "Solid performance—use analytics to keep momentum high."
+			average_score_class = "text-primary"
+		else:
+			average_score_message = "Review analytics to reinforce challenging topics."
+			average_score_class = "text-warning"
+
+	return render_template(
+		'professor_index.html',
+		upcoming_assessment=upcoming_assessment,
+		active_exam_count=active_exam_count,
+		active_exam_count_display=active_exam_count_display,
+		active_exam_message=active_exam_message,
+		active_exam_class=active_exam_class,
+		average_score_percent=average_score_percent,
+		average_score_display=average_score_display,
+		average_score_message=average_score_message,
+		average_score_class=average_score_class,
+	)
 
 @app.route('/faq')
 def faq():
