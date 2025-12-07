@@ -86,13 +86,11 @@ $( document ).ready(function() {
 </script>
 <div class="container">
   <div class="card card-folders">
-    {% if callresults is not none %}
+    {% if students %}
     <div class="card-header">
       <div class="row align-items-center">
           <div class="col mr-auto">
-            {% for res in callresults %}
-            <h4 class="card-title m-0">Student Folders of {{res['test_id']}}</h4>
-            {% endfor %}
+            <h4 class="card-title m-0">Student Folders of {{ test_id }}</h4>
           </div>
           <div class="col col-auto pr-2">
             <div class="btn-group">
@@ -104,15 +102,15 @@ $( document ).ready(function() {
     </div>
     <div class="card-body" id="foldersGroup">
       <div id="main-folders" class="d-flex align-items-stretch flex-wrap">
-{% for res in callresults%}
+{% for email in students %}
         <div class="d-inline-flex">
             <button class="folder-container">
                 <span>
-                <a href="studentmonitoringstats/{{res['test_id']}}/{{res['email']}}">
+                <a href="{{ url_for('studentmonitoringstats', testid=test_id, email=email) }}">
               <div class="folder-icon">
                 <i class="fa fa-folder folder-icon-color"></i>
               </div>
-              <div class="folder-name">{{res['email']}}<br>
+              <div class="folder-name">{{ email }}<br>
               </div>
             </a>
         </span>

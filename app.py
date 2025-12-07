@@ -1439,10 +1439,18 @@ def displaystudentsdetails():
 	if request.method == 'POST':
 		tidoption = request.form['choosetid']
 		cur = mysql.connection.cursor()
-		cur.execute('SELECT DISTINCT email,test_id from proctoring_log where test_id = %s', [tidoption])
-		callresults = cur.fetchall()
+		cur.execute(
+			'SELECT DISTINCT email FROM proctoring_log WHERE test_id = %s ORDER BY email',
+			[tidoption],
+		)
+		rows = cur.fetchall()
 		cur.close()
-		return render_template("displaystudentsdetails.html", callresults = callresults)
+		students = [row['email'] for row in rows]
+		return render_template(
+			"displaystudentsdetails.html",
+			students=students,
+			test_id=tidoption,
+		)
 
 @app.route('/insertmarksdetails', methods=['GET','POST'])
 @user_role_professor
