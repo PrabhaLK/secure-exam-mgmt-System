@@ -120,9 +120,11 @@
 <main id="profMain" class="content">
   <div class="prof-dashboard container-fluid px-3 px-md-4">
     {% include 'includes/_messages.html' %}
-    <div class="row">
-      <div class="col-12">
-        {% block body %}{% endblock %}
+    <div class="prof-dashboard__body">
+      <div class="row">
+        <div class="col-12">
+          {% block body %}{% endblock %}
+        </div>
       </div>
     </div>
 
@@ -164,12 +166,21 @@
   z-index: 1;
   padding-top: 0.35rem;
   padding-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.prof-dashboard__body {
+  flex: 1 0 auto;
 }
 #profMain footer {
   color: rgba(226, 232, 240, 0.75);
 }
 #profMain footer a {
   color: #f8fafc;
+}
+.prof-dashboard .app-footer {
+  margin-top: auto;
 }
 </style>
 
