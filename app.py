@@ -216,6 +216,161 @@ def user_role_student(f):
 			return redirect(url_for('login'))
 	return wrap
 
+
+def _build_exam_countdown(start_dt, end_dt):
+	now = datetime.utcnow()
+	if isinstance(start_dt, datetime) and isinstance(end_dt, datetime) and start_dt <= now <= end_dt:
+		return "Live now", "live"
+	if isinstance(start_dt, datetime) and start_dt > now:
+		delta = start_dt - now
+		total_seconds = int(delta.total_seconds())
+		if total_seconds <= 0:
+			return "Starting soon", "upcoming"
+		days, remainder = divmod(total_seconds, 86400)
+		hours, remainder = divmod(remainder, 3600)
+		minutes = remainder // 60
+		if days > 0:
+			return f"Starts in {days:02d}d {hours:02d}h", "upcoming"
+		if hours > 0:
+			return f"Starts in {hours:02d}h {minutes:02d}m", "upcoming"
+		return f"Starts in {minutes:02d}m", "upcoming"
+	return "Schedule pending", "pending"
+
+
+def _calculate_average_for_tests(email, completed_tests):
+	if not completed_tests:
+		return None
+	total_percentage = 0.0
+	counted = 0
+	for test in completed_tests:
+		test_id = test.get('test_id')
+		test_type = (test.get('test_type') or '').lower()
+		if not test_id or not test_type:
+			continue
+		if test_type == "objective":
+			score = marks_calc(email, test_id) or 0
+			cur = mysql.connection.cursor()
+			cur.execute('SELECT SUM(marks) AS total_marks FROM questions WHERE test_id = %s', (test_id,))
+			row = cur.fetchone()
+			cur.close()
+			total_marks = row['total_marks'] if row and row['total_marks'] is not None else 0
+			if total_marks:
+				normalised = max(float(score), 0.0)
+				total_percentage += (normalised / float(total_marks)) * 100.0
+				counted += 1
+		elif test_type == "subjective":
+			score_cur = mysql.connection.cursor()
+			score_cur.execute('SELECT SUM(marks) AS obtained FROM longtest WHERE test_id = %s AND email = %s', (test_id, email))
+			score_row = score_cur.fetchone()
+			score_cur.close()
+			total_cur = mysql.connection.cursor()
+			total_cur.execute('SELECT SUM(marks) AS total_marks FROM longqa WHERE test_id = %s', (test_id,))
+			total_row = total_cur.fetchone()
+			total_cur.close()
+			obtained = score_row['obtained'] if score_row and score_row['obtained'] is not None else 0
+			total_marks = total_row['total_marks'] if total_row and total_row['total_marks'] is not None else 0
+			if total_marks:
+				total_percentage += (float(obtained) / float(total_marks)) * 100.0
+				counted += 1
+		elif test_type == "practical":
+			score_cur = mysql.connection.cursor()
+			score_cur.execute('SELECT SUM(marks) AS obtained FROM practicaltest WHERE test_id = %s AND email = %s', (test_id, email))
+			score_row = score_cur.fetchone()
+			score_cur.close()
+			total_cur = mysql.connection.cursor()
+			total_cur.execute('SELECT SUM(marks) AS total_marks FROM practicalqa WHERE test_id = %s', (test_id,))
+			total_row = total_cur.fetchone()
+			total_cur.close()
+			obtained = score_row['obtained'] if score_row and score_row['obtained'] is not None else 0
+			total_marks = total_row['total_marks'] if total_row and total_row['total_marks'] is not None else 0
+			if total_marks:
+				total_percentage += (float(obtained) / float(total_marks)) * 100.0
+				counted += 1
+	return (total_percentage / counted) if counted else None
+
+
+def _fetch_next_exam_details(email, uid):
+	cur = mysql.connection.cursor()
+	cur.execute('''
+		SELECT t.test_id, t.subject, t.topic, t.start, t.end, t.duration, t.test_type
+		FROM studenttestinfo sti
+		JOIN teachers t ON t.test_id = sti.test_id
+		WHERE sti.email = %s AND sti.uid = %s AND (sti.completed = 0 OR sti.completed IS NULL)
+	''', (email, uid))
+	assignments = cur.fetchall()
+	cur.close()
+	if not assignments:
+		return None
+	now = datetime.utcnow()
+	live, upcoming, fallback = [], [], []
+	for row in assignments:
+		start_dt = row.get('start')
+		end_dt = row.get('end')
+		if isinstance(start_dt, datetime) and isinstance(end_dt, datetime) and start_dt <= now <= end_dt:
+			live.append(row)
+		elif isinstance(start_dt, datetime) and start_dt > now:
+			upcoming.append(row)
+		else:
+			fallback.append(row)
+
+	def sort_key(record):
+		value = record.get('start')
+		return value if isinstance(value, datetime) else datetime.max
+
+	if live:
+		candidate_pool = live
+	elif upcoming:
+		candidate_pool = upcoming
+	else:
+		candidate_pool = fallback
+	if not candidate_pool:
+		return None
+	candidate = min(candidate_pool, key=sort_key)
+	start_raw = candidate.get('start')
+	end_raw = candidate.get('end')
+	start_dt = start_raw if isinstance(start_raw, datetime) else None
+	end_dt = end_raw if isinstance(end_raw, datetime) else None
+	countdown_label, status = _build_exam_countdown(start_dt, end_dt)
+	badge_class_map = {
+		"live": "badge badge-success text-uppercase",
+		"upcoming": "badge badge-warning text-uppercase",
+		"pending": "badge badge-secondary text-uppercase",
+	}
+	badge_text_map = {
+		"live": "Live now",
+		"upcoming": "Scheduled",
+		"pending": "Pending",
+	}
+	start_date_label = start_dt.strftime('%d %b') if start_dt else None
+	start_time_label = start_dt.strftime('%I:%M %p').lstrip('0') if start_dt else None
+	duration_value = candidate.get('duration')
+	duration_label = f"{duration_value} Minutes" if duration_value is not None else None
+	meta_parts = []
+	if start_date_label:
+		meta_parts.append(start_date_label)
+	if start_time_label:
+		meta_parts.append(start_time_label)
+	if duration_label:
+		meta_parts.append(duration_label)
+	meta_line = " | ".join(meta_parts) if meta_parts else None
+	return {
+		"test_id": candidate.get('test_id'),
+		"subject": candidate.get('subject'),
+		"topic": candidate.get('topic'),
+		"start": start_dt,
+		"end": end_dt,
+		"duration": duration_value,
+		"test_type": candidate.get('test_type'),
+		"countdown_label": countdown_label,
+		"badge_class": badge_class_map.get(status, "badge badge-secondary text-uppercase"),
+		"badge_text": badge_text_map.get(status, "Pending"),
+		"status": status,
+		"start_date_label": start_date_label,
+		"start_time_label": start_time_label,
+		"duration_label": duration_label,
+		"meta_line": meta_line,
+	}
+
 @app.route("/config")
 @user_role_professor
 def get_publishable_key():
@@ -361,7 +516,58 @@ def report_professor():
 @app.route('/student_index')
 @user_role_student
 def student_index():
-	return render_template('student_index.html')
+	email = session.get('email')
+	uid = session.get('uid')
+	cur = mysql.connection.cursor()
+	cur.execute('''
+		SELECT sti.test_id, t.test_type
+		FROM studenttestinfo sti
+		JOIN teachers t ON t.test_id = sti.test_id
+		WHERE sti.email = %s AND sti.uid = %s AND sti.completed = 1
+	''', (email, uid))
+	completed_tests = cur.fetchall()
+	cur.close()
+
+	completed_count = len(completed_tests)
+	completed_count_display = f"{completed_count:02d}"
+
+	average_score_percent = _calculate_average_for_tests(email, completed_tests)
+	if average_score_percent is None:
+		average_score_display = "N/A"
+		average_score_message = "Complete an exam to unlock analytics."
+		average_score_class = "text-muted"
+	else:
+		average_score_display = f"{average_score_percent:.0f}%"
+		if average_score_percent >= 85:
+			average_score_message = "Excellent performance! Review analytics to plan the next exam."
+			average_score_class = "text-success"
+		elif average_score_percent >= 60:
+			average_score_message = "Solid progress - use your analytics to keep improving."
+			average_score_class = "text-primary"
+		else:
+			average_score_message = "Review analytics to target your next improvement."
+			average_score_class = "text-warning"
+
+	if completed_count == 0:
+		completed_message = "Your completed exams will appear here once you finish one."
+	elif completed_count < 3:
+		completed_message = "You're getting started - keep the momentum going."
+	else:
+		completed_message = "Keep momentum going and maintain streaks."
+
+	next_exam = _fetch_next_exam_details(email, uid)
+
+	return render_template(
+		'student_index.html',
+		completed_count=completed_count,
+		completed_count_display=completed_count_display,
+		completed_message=completed_message,
+		average_score_percent=average_score_percent,
+		average_score_display=average_score_display,
+		average_score_message=average_score_message,
+		average_score_class=average_score_class,
+		next_exam=next_exam,
+	)
 
 @app.route('/professor_index')
 @user_role_professor
@@ -615,19 +821,15 @@ def changePassword():
 			if(password == oldPassword):
 				cur.execute("UPDATE users SET password = %s WHERE email = %s", (newPassword, session['email']))
 				mysql.connection.commit()
-				msg="Changed successfully"
 				flash('Changed successfully.', 'success')
 				cur.close()
-				if usertype == "student":
-					return render_template("student_index.html", success=msg)
-				else:
-					return render_template("professor_index.html", success=msg)
+				target = 'student_index' if usertype == "student" else 'professor_index'
+				return redirect(url_for(target))
 			else:
-				error = "Wrong password"
-				if usertype == "student":
-					return render_template("student_index.html", error=error)
-				else:
-					return render_template("professor_index.html", error=error)
+				flash('Wrong password.', 'danger')
+				cur.close()
+				target = 'student_index' if usertype == "student" else 'professor_index'
+				return redirect(url_for(target))
 		else:
 			return redirect(url_for('/'))
 
