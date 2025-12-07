@@ -242,11 +242,15 @@ def _calculate_average_for_tests(email, completed_tests):
 		return None
 	total_percentage = 0.0
 	counted = 0
+	processed = set()
 	for test in completed_tests:
 		test_id = test.get('test_id')
 		test_type = (test.get('test_type') or '').lower()
 		if not test_id or not test_type:
 			continue
+		if test_id in processed:
+			continue
+		processed.add(test_id)
 		if test_type == "objective":
 			score = marks_calc(email, test_id) or 0
 			cur = mysql.connection.cursor()
@@ -520,7 +524,7 @@ def student_index():
 	uid = session.get('uid')
 	cur = mysql.connection.cursor()
 	cur.execute('''
-		SELECT sti.test_id, t.test_type
+		SELECT DISTINCT sti.test_id, t.test_type
 		FROM studenttestinfo sti
 		JOIN teachers t ON t.test_id = sti.test_id
 		WHERE sti.email = %s AND sti.uid = %s AND sti.completed = 1
