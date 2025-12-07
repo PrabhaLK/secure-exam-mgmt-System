@@ -1226,6 +1226,13 @@ def countTotalstudentslogs(testid,email):
 	tot = [i['total'] for i in callresults]
 	return tot
 
+def countAudiostudentslogs(testid,email):
+	cur = mysql.connection.cursor()
+	cur.execute('SELECT COUNT(*) as total from proctoring_log where test_id = %s and email = %s and voice_db IS NOT NULL AND voice_db <> ""', (testid, email))
+	callresults = cur.fetchall()
+	cur.close()
+	return [i['total'] for i in callresults]
+
 @app.route('/studentmonitoringstats/<testid>/<email>', methods=['GET','POST'])
 @user_role_professor
 def studentmonitoringstats(testid,email):
@@ -1238,7 +1245,8 @@ def ajaxstudentmonitoringstats(testid,email):
 	mob = countMobStudentslogs(testid,email)
 	per = countMTOPstudentslogs(testid,email)
 	tot = countTotalstudentslogs(testid,email)
-	return jsonify({"win":win,"mob":mob,"per":per,"tot":tot})
+	aud = countAudiostudentslogs(testid,email)
+	return jsonify({"win":win,"mob":mob,"per":per,"tot":tot,"aud":aud})
 
 @app.route('/displaystudentslogs/<testid>/<email>', methods=['GET','POST'])
 @user_role_professor

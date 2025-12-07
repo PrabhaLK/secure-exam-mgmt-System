@@ -1,82 +1,148 @@
 {% extends 'professor_dashboard.html' %}
 {% block body %}
-<div class="row align-items-center d-flex  justify-content-center">
-    <div class="col-12 mb-4">
-        <div class="card border-light shadow-sm components-section align-items-center d-flex  justify-content-center">
-            <div class="card-body align-items-center d-flex justify-content-center">     
-                <div class="row mb-4">
-                    <div class="col-lg-12 col-sm-16">
-                      <h3 class="h3 text-center">STUDENT MONITORING STATISTICS of {{testid}} of {{email}}</h3>  
+<style>
+    .stats-wrapper {
+        max-width: 1080px;
+    }
+    .stats-card {
+        border: none;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #223a66 0%, #1d2b5b 100%);
+        color: #ffffff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        min-height: 180px;
+        position: relative;
+        overflow: hidden;
+    }
+    .stats-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 18px 35px rgba(18, 38, 78, 0.25);
+    }
+    .stats-card.light {
+        background: linear-gradient(145deg, #ffffff 0%, #f5f7ff 100%);
+        color: #1e2a4a;
+        border: 1.5px solid rgba(34, 58, 102, 0.18);
+        box-shadow: 0 14px 24px rgba(29, 43, 91, 0.08);
+    }
+    .stats-card__icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        background: rgba(255,255,255,0.15);
+    }
+    .stats-card.light .stats-card__icon {
+        background: rgba(34,58,102,0.18);
+        color: #223a66;
+        box-shadow: 0 6px 12px rgba(34, 58, 102, 0.12);
+    }
+    .stats-card__metric {
+        font-size: 2.5rem;
+        font-weight: 600;
+        line-height: 1;
+    }
+    .stats-card__cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+    }
+    .stats-card__cta .fas {
+        font-size: 0.75rem;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.25rem;
+    }
+    @media (max-width: 576px) {
+        .stats-card {
+            min-height: 0;
+        }
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-12 stats-wrapper">
+        <div class="card border-light shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+                    <div>
+                        <p class="text-uppercase text-muted mb-1 small">Monitoring Overview</p>
+                        <h2 class="h4 mb-0">{{ testid }} · <span class="text-primary">{{ email }}</span></h2>
                     </div>
-                    <p></p>
-                    <div class="row">
-                        <div class="col-12">
-                         <div class="card-deck">
-                            <div class="card shadow-sm">
-                                <div class="card-body">
-                                    <div class="icon icon-shape icon-md icon-shape-primary rounded me-4 me-sm-0"><span class="fas fa-binoculars"></span></div>
-                                    <p></p>
-                                    <h2 class="h5 center-block">Total Logs</h2>
-                                    <h3 class="h2 mb-1 center-block" id="tot"></h3>
-                                    <button class="btn btn-block btn-primary"  onclick="location.href='{{ url_for('displaystudentslogs', testid=testid, email=email) }}'">VIEW</button>
-                                </div>
-                            </div>
-						<div class="card shadow-sm">
-                            <div class="card-body">
-                                <div class="icon icon-shape icon-md icon-shape-primary rounded me-4 me-sm-0"><span class="fas fa-window-restore"></span></div>
-                                <p></p>
-                                <h2 class="h5 center-block">Window Events</h2>
-                                <h3 class="h2 mb-1 center-block" id="win"></h3>
-                                <button class="btn btn-block btn-primary"  onclick="location.href='{{ url_for('wineventstudentslogs', testid=testid, email=email) }}'">VIEW</button>
-                            </div>
-                        </div>
-                         </div>
-                        </div>
-                    </div>
-                    <p></p>
-                    <div class="row">
-                        <div class="col-12">
-                         <div class="card-deck">
-                            <div class="card shadow-sm">
-                            <div class="card-body">
-                                <div class="icon icon-shape icon-md icon-shape-primary rounded me-4 me-sm-0"><span class="fas fa-mobile-alt"></span></div>
-                                <p></p>
-                                <h2 class="h5">Mobile Detected</h2>
-                                <h3 class="h2 mb-1" id="mob"></h3>
-                                <button class="btn btn-block btn-primary"  onclick="location.href='{{ url_for('mobdisplaystudentslogs', testid=testid, email=email) }}'">VIEW</button>
-                            </div>
-                            </div>
-                            <div class="card shadow-sm">
-                                <div class="card-body">
-                                    <div class="icon icon-shape icon-md icon-shape-primary rounded me-4 me-sm-0"><span class="fas fa-user-friends"></span></div>
-                                    <p></p>
-                                    <h2 class="h5">More than 1 Person Detected Events</h2>
-                                    <h3 class="h2 mb-1" id="per"></h3>
-                                    <button class="btn btn-block btn-primary"  onclick="location.href='{{ url_for('persondisplaystudentslogs', testid=testid, email=email) }}'">VIEW</button>
-                                </div>
-                              </div>
-                    </div>
-                          </div>
-                    </div>
-                    <p></p>
-                    <div class="row">
-                        <div class="col-12">
-                         <div class="card-deck">
-                            <div class="card shadow-sm">
-                            <div class="card-body">
-                                <div class="icon icon-shape icon-md icon-shape-primary rounded me-4 me-sm-0"><span class="fas fa-microphone"></span></div>
-                                <p></p>
-                                <h2 class="h5">Audio Monitoring</h2>
-                                <h3 class="h2 mb-1" id="mob"></h3>
-                                <button class="btn btn-block btn-primary"  onclick="location.href='{{ url_for('audiodisplaystudentslogs', testid=testid, email=email) }}'">VIEW</button>
-                            </div>
-                            </div>
-                            </div>
-            </div>
-                        </div>
-        </div>
                 </div>
+
+                <div class="stats-grid mb-4">
+                    <div class="card stats-card">
+                        <div class="card-body">
+                            <div class="stats-card__icon"><span class="fas fa-binoculars"></span></div>
+                            <p class="mb-1 text-uppercase small opacity-75">Total Logs</p>
+                            <div class="stats-card__metric" id="tot">--</div>
+                            <button class="btn btn-sm btn-light rounded-pill stats-card__cta mt-3" onclick="location.href='{{ url_for('displaystudentslogs', testid=testid, email=email) }}'">
+                                View details <span class="fas fa-arrow-right"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card stats-card light">
+                        <div class="card-body">
+                            <div class="stats-card__icon text-primary"><span class="fas fa-window-restore"></span></div>
+                            <p class="mb-1 text-uppercase small text-muted">Window Events</p>
+                            <div class="stats-card__metric text-primary" id="win">--</div>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill stats-card__cta mt-3" onclick="location.href='{{ url_for('wineventstudentslogs', testid=testid, email=email) }}'">
+                                View details <span class="fas fa-arrow-right"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card stats-card light">
+                        <div class="card-body">
+                            <div class="stats-card__icon text-primary"><span class="fas fa-mobile-alt"></span></div>
+                            <p class="mb-1 text-uppercase small text-muted">Mobile Detected</p>
+                            <div class="stats-card__metric text-primary" id="mob">--</div>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill stats-card__cta mt-3" onclick="location.href='{{ url_for('mobdisplaystudentslogs', testid=testid, email=email) }}'">
+                                View details <span class="fas fa-arrow-right"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card stats-card light">
+                        <div class="card-body">
+                            <div class="stats-card__icon text-primary"><span class="fas fa-user-friends"></span></div>
+                            <p class="mb-1 text-uppercase small text-muted">Multiple Persons</p>
+                            <div class="stats-card__metric text-primary" id="per">--</div>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill stats-card__cta mt-3" onclick="location.href='{{ url_for('persondisplaystudentslogs', testid=testid, email=email) }}'">
+                                View details <span class="fas fa-arrow-right"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card stats-card light">
+                        <div class="card-body">
+                            <div class="stats-card__icon text-primary"><span class="fas fa-microphone"></span></div>
+                            <p class="mb-1 text-uppercase small text-muted">Audio Monitoring</p>
+                            <div class="stats-card__metric text-primary" id="aud">--</div>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill stats-card__cta mt-3" onclick="location.href='{{ url_for('audiodisplaystudentslogs', testid=testid, email=email) }}'">
+                                View details <span class="fas fa-arrow-right"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <small class="text-muted">Statistics refresh every 5 seconds while this page is open.</small>
             </div>
+        </div>
+    </div>
+</div>
+
 <script>
     var tid = "{{testid}}";
     var eid = "{{email}}";
@@ -88,10 +154,12 @@
         contentType: 'application/json;charset=UTF-8',
         cache: false,
         success: function(msg) {
-            $("#win").html(msg.win);
-            $("#mob").html(msg.mob);
-            $("#per").html(msg.per);
-            $("#tot").html(msg.tot);
+                   const formatMetric = (val) => Array.isArray(val) ? (val[0] ?? 0) : (val ?? 0);
+                   $("#win").html(formatMetric(msg.win));
+                   $("#mob").html(formatMetric(msg.mob));
+                   $("#per").html(formatMetric(msg.per));
+                   $("#tot").html(formatMetric(msg.tot));
+                   $("#aud").html(formatMetric(msg.aud));
 		},
 			error: function(jqXHR, textStatus, errorThrown) {
 				$("#msg1").html("<span style='color:red;'>" + textStatus + " " + errorThrown + "</span>");
