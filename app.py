@@ -21,6 +21,7 @@ import cv2
 import numpy as np
 import json
 import base64
+from threading import Lock
 from wtforms_components import TimeField
 from wtforms.fields.html5 import DateField
 from wtforms.validators import ValidationError, NumberRange
@@ -29,6 +30,116 @@ from flask_cors import CORS, cross_origin
 import camera
 
 app = Flask(__name__)
+
+# Face verification configuration
+FACE_DETECTOR_BACKEND = "opencv"
+FACE_MODEL_CANDIDATES = [
+	("Facenet512", 0.30),
+	("Facenet", 0.40),
+	("ArcFace", 0.68),
+	("VGG-Face", 0.40),
+]
+
+
+def _load_face_model():
+	for model_name, threshold in FACE_MODEL_CANDIDATES:
+		try:
+			model = DeepFace.build_model(model_name)
+			app.logger.info("Loaded face recognition backbone: %s", model_name)
+			return model_name, model, threshold
+		except ValueError:
+			app.logger.warning(
+				"DeepFace model '%s' not available in this installation. Trying next option...",
+				model_name,
+			)
+		except Exception as exc:
+			app.logger.warning(
+				"Failed to initialise DeepFace model '%s': %s. Trying next option...",
+				model_name,
+				exc,
+			)
+	raise RuntimeError(
+		"Unable to load any supported DeepFace model. Please ensure deepface package "
+		"is up to date and includes at least one of: %s"
+		% ", ".join(name for name, _ in FACE_MODEL_CANDIDATES)
+	)
+
+
+FACE_MODEL_NAME, _, FACE_DISTANCE_THRESHOLD = _load_face_model()
+_face_embedding_cache = {}
+_face_cache_lock = Lock()
+
+
+def _prepare_face_image(image_b64, target_size=(224, 224)):
+	"""Decode a base64 image, convert to RGB, and resize to a stable shape."""
+	if not image_b64:
+		return None
+	try:
+		decoded = base64.b64decode(image_b64)
+	except (ValueError, TypeError):
+		return None
+	nparr = np.frombuffer(decoded, np.uint8)
+	frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+	if frame is None:
+		return None
+	if target_size:
+		frame = cv2.resize(frame, target_size)
+	return frame
+
+
+def _compute_face_embedding(image_array):
+	"""Generate a normalized embedding vector for the given face image."""
+	try:
+		representations = DeepFace.represent(
+			img_path=image_array,
+			model_name=FACE_MODEL_NAME,
+			detector_backend=FACE_DETECTOR_BACKEND,
+			enforce_detection=False,
+		)
+	except Exception as exc:  # DeepFace bubbles TF errors as generic Exceptions
+		app.logger.warning("DeepFace embedding failed: %s", exc)
+		return None
+
+	if not representations:
+		return None
+
+	embedding = representations[0].get("embedding")
+	if embedding is None:
+		return None
+	return np.asarray(embedding, dtype=np.float32)
+
+
+def _get_cached_registered_embedding(email, stored_image_b64):
+	"""Fetch or compute the enrolment embedding for a registered user."""
+	with _face_cache_lock:
+		cached = _face_embedding_cache.get(email)
+		if cached and cached["image_b64"] == stored_image_b64:
+			return cached["embedding"]
+
+	prepared = _prepare_face_image(stored_image_b64)
+	if prepared is None:
+		return None
+
+	embedding = _compute_face_embedding(prepared)
+	if embedding is None:
+		return None
+
+	with _face_cache_lock:
+		_face_embedding_cache[email] = {
+			"image_b64": stored_image_b64,
+			"embedding": embedding,
+		}
+	return embedding
+
+
+def _cosine_distance(vec_a, vec_b):
+	vec_a = np.asarray(vec_a, dtype=np.float32)
+	vec_b = np.asarray(vec_b, dtype=np.float32)
+	norm_a = np.linalg.norm(vec_a)
+	norm_b = np.linalg.norm(vec_b)
+	if norm_a == 0 or norm_b == 0:
+		return float("inf")
+	return 1.0 - float(np.dot(vec_a, vec_b) / (norm_a * norm_b))
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
@@ -408,44 +519,60 @@ def login():
 		user_type = request.form['user_type']
 		imgdata1 = request.form['image_hidden']
 		cur = mysql.connection.cursor()
-		results1 = cur.execute('SELECT uid, name, email, password, user_type, user_image, user_login from users where email = %s and user_type = %s' , (email,user_type))
-		if results1 > 0:
-			cresults = cur.fetchone()
-			imgdata2 = cresults['user_image']
-			password = cresults['password']
-			name = cresults['name']
-			uid = cresults['uid']
-			if cresults.get('user_login') == 1:
-				cur.execute('UPDATE users set user_login = 0 where email = %s and user_type = %s', (email, user_type))
-				mysql.connection.commit()
-			nparr1 = np.frombuffer(base64.b64decode(imgdata1), np.uint8)
-			nparr2 = np.frombuffer(base64.b64decode(imgdata2), np.uint8)
-			image1 = cv2.imdecode(nparr1, cv2.COLOR_BGR2GRAY)
-			image2 = cv2.imdecode(nparr2, cv2.COLOR_BGR2GRAY)
-			img_result  = DeepFace.verify(image1, image2, enforce_detection = False)
-			if img_result["verified"] == True and password == password_candidate:
-				results2 = cur.execute('UPDATE users set user_login = 1 where email = %s' , [email])
-				mysql.connection.commit()
-				if results2 > 0:
-					session['logged_in'] = True
-					session['email'] = email
-					session['name'] = name
-					session['user_role'] = user_type
-					session['uid'] = uid
-					if user_type == "student":
-						return redirect(url_for('student_index'))
+		try:
+			results1 = cur.execute('SELECT uid, name, email, password, user_type, user_image, user_login from users where email = %s and user_type = %s' , (email,user_type))
+			if results1 > 0:
+				cresults = cur.fetchone()
+				imgdata2 = cresults['user_image']
+				password = cresults['password']
+				name = cresults['name']
+				uid = cresults['uid']
+				if cresults.get('user_login') == 1:
+					cur.execute('UPDATE users set user_login = 0 where email = %s and user_type = %s', (email, user_type))
+					mysql.connection.commit()
+
+				login_face = _prepare_face_image(imgdata1)
+				if login_face is None:
+					error = 'Unable to process the captured face. Please retake the photo and try again.'
+					return render_template('login.html', error=error)
+
+				registered_embedding = _get_cached_registered_embedding(email, imgdata2)
+				if registered_embedding is None:
+					error = 'We could not load the stored face template for this account. Please contact support.'
+					return render_template('login.html', error=error)
+
+				login_embedding = _compute_face_embedding(login_face)
+				if login_embedding is None:
+					error = 'Face capture was too noisy. Please try again with better lighting.'
+					return render_template('login.html', error=error)
+
+				face_distance = _cosine_distance(login_embedding, registered_embedding)
+				is_face_verified = face_distance <= FACE_DISTANCE_THRESHOLD
+
+				if is_face_verified and password == password_candidate:
+					results2 = cur.execute('UPDATE users set user_login = 1 where email = %s' , [email])
+					mysql.connection.commit()
+					if results2 > 0:
+						session['logged_in'] = True
+						session['email'] = email
+						session['name'] = name
+						session['user_role'] = user_type
+						session['uid'] = uid
+						if user_type == "student":
+							return redirect(url_for('student_index'))
+						else:
+							return redirect(url_for('professor_index'))
 					else:
-						return redirect(url_for('professor_index'))
+						error = 'Error Occurred!'
+						return render_template('login.html', error=error)	
 				else:
-					error = 'Error Occurred!'
-					return render_template('login.html', error=error)	
+					error = 'Face verification failed or password was invalid. Please try again.'
+					return render_template('login.html', error=error)
 			else:
-				error = 'Either Image not Verified or you have entered Invalid password or Already login'
+				error = 'Already Login or Email was not found!'
 				return render_template('login.html', error=error)
+		finally:
 			cur.close()
-		else:
-			error = 'Already Login or Email was not found!'
-			return render_template('login.html', error=error)
 	return render_template('login.html')
 
 @app.route('/verifyEmail', methods=['GET','POST'])
@@ -1411,12 +1538,23 @@ def give_test():
 			cresults = cur1.fetchone()
 			imgdata2 = cresults['user_image']
 			cur1.close()
-			nparr1 = np.frombuffer(base64.b64decode(imgdata1), np.uint8)
-			nparr2 = np.frombuffer(base64.b64decode(imgdata2), np.uint8)
-			image1 = cv2.imdecode(nparr1, cv2.COLOR_BGR2GRAY)
-			image2 = cv2.imdecode(nparr2, cv2.COLOR_BGR2GRAY)
-			img_result  = DeepFace.verify(image1, image2, enforce_detection = False)
-			if img_result["verified"] == True:
+			login_face = _prepare_face_image(imgdata1)
+			if login_face is None:
+				flash('Unable to process the captured face. Please retake the photo.', 'danger')
+				return redirect(url_for('give_test'))
+
+			registered_embedding = _get_cached_registered_embedding(session['email'], imgdata2)
+			if registered_embedding is None:
+				flash('Unable to load stored face template. Please contact support.', 'danger')
+				return redirect(url_for('give_test'))
+
+			login_embedding = _compute_face_embedding(login_face)
+			if login_embedding is None:
+				flash('Face capture was too noisy. Please try again with better lighting.', 'danger')
+				return redirect(url_for('give_test'))
+
+			face_distance = _cosine_distance(login_embedding, registered_embedding)
+			if face_distance <= FACE_DISTANCE_THRESHOLD:
 				cur = mysql.connection.cursor()
 				results = cur.execute('SELECT * from teachers where test_id = %s', [test_id])
 				if results > 0:

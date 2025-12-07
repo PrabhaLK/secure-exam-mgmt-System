@@ -3,6 +3,13 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
+# Enable resource-variable support for the legacy SavedModel so TensorFlow 2
+# does not emit reference-variable warnings when the graph is restored.
+tf.compat.v1.enable_resource_variables()
+
+# Reduce noisy TF logging; we surface actionable errors via Flask logging.
+tf.get_logger().setLevel('ERROR')
+
 def get_landmark_model(saved_model="models/pose_model"):
     model = keras.models.load_model(saved_model)
     return model
